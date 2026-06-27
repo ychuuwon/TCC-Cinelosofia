@@ -1,13 +1,22 @@
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { consumeAuthMessage } from '../auth';
 
 export default function Login({ onLogin }) {
-  const [username, setUsername] = useState('');
+  const [identificador, setIdentificador] = useState('');
   const [password, setPassword] = useState('');
   const [mensagem, setMensagem] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const redirectedMessage = location.state?.mensagem || consumeAuthMessage();
+
+    if (redirectedMessage) {
+      setMensagem(redirectedMessage);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,86 +26,61 @@ export default function Login({ onLogin }) {
       const response = await fetch('http://localhost:7777/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: username, senha: password }),
+        body: JSON.stringify({
+          matricula: identificador,
+          nome_usuario: identificador,
+          senha: password,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMensagem(data.mensagem || 'Erro no login');
+        setMensagem(data.erro || data.mensagem || 'Erro no login');
         return;
       }
 
-      localStorage.setItem('token', data.token);
-      onLogin(data.token);
-      navigate('/home');
+      onLogin(data.token, data.usuario);
+      navigate('/');
     } catch (error) {
       setMensagem('Erro na conexão com o servidor');
     }
   };
 
   return (
-    <div 
-      style={{ 
-        backgroundImage: "url('/images/salao.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        minHeight: '100vh',
-      }}
-    >
-      <div id="login" className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-        <div className="container">
-          <div id="login-row" className="row justify-content-center align-items-center">
-            <div id="login-column" className="col-md-6">
-              <div id="login-box" className="col-md-12 p-4" style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '8px' }}>
-                <form id="login-form" className="form" onSubmit={handleSubmit}>
-                  <h3 className="text-center text-info">Login</h3>
+    <main className="auth-screen">
+      <section className="auth-form-panel form-container">
+        <h2>FAÇA LOGIN OU CADASTRE-SE:</h2>
+        <form onSubmit={handleSubmit} className="auth-form">
+          <label htmlFor="identificador">Nome de usuário ou matrícula:</label>
+          <input
+            id="identificador"
+            type="text"
+            placeholder="ex. 2024xxxxxx"
+            value={identificador}
+            onChange={(e) => setIdentificador(e.target.value)}
+            required
+          />
 
-                  {mensagem && <p className="text-danger">{mensagem}</p>}
+          <label htmlFor="senha">Senha:</label>
+          <input
+            id="senha"
+            type="password"
+            placeholder="ex. abc1234"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-                  <div className="form-group">
-                    <label htmlFor="username" className="text-info">Usuário:</label><br />
-                    <input
-                      type="text"
-                      name="username"
-                      id="username"
-                      className="form-control"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                    />
-                  </div>
+          {mensagem && <p className="auth-message">{mensagem}</p>}
 
-                  <div className="form-group">
-                    <label htmlFor="password" className="text-info">Senha:</label><br />
-                    <input
-                      type="password"
-                      name="password"
-                      id="password"
-                      className="form-control"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group d-flex justify-content-between mt-4">
-                    <input
-                      type="submit"
-                      name="submit"
-                      className="btn btn-info btn-md"
-                      value="Enviar"
-                    />
-                    <a href="/register" className="btn btn-secondary btn-md ms-5">
-                      Registre-se
-                    </a>
-                  </div>
-                </form>
-              </div>
-            </div>
+          <div className="auth-actions">
+            <button type="submit" className="btn-primary btn-pill">Entrar!</button>
+            <Link to="/register" className="btn-primary outline btn-pill">Cadastre-se!</Link>
           </div>
-        </div>
-      </div>
-    </div>
+        </form>
+      </section>
+      <aside className="auth-visual login-visual" />
+    </main>
   );
 }

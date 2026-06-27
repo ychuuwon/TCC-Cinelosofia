@@ -1,10 +1,9 @@
 import { Navigate } from 'react-router-dom';
+import { AUTH_MESSAGE, isLoggedIn } from '../auth';
 
 export default function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token');
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" replace state={{ mensagem: AUTH_MESSAGE }} />;
   }
 
   return children;
