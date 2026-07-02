@@ -25,7 +25,7 @@ export default function Home() {
           <p className="eyebrow">Clube de Cinema e Filosofia do IFC - Campus Sombrio</p>
           <h1>PORTAL CINELOSOFIA</h1>
           <p>
-            Um espaço para divulgar os encontros, acervos e debates do clube com conteúdo atualizado pelos administradores.
+            Clube de cinema e filosofia do IFC-Campus Sombrio
           </p>
           <div className="hero-actions">
             <Link to="/encontros/proximo" className="btn-pill">PARTICIPE</Link>
@@ -33,14 +33,14 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-image">
-          <img src="http://localhost:7777/imagens/encontro.png" alt="Clube Cinelosofia" />
+          <img src="/imagens/encontro.png" alt="Clube Cinelosofia" />
         </div>
       </section>
 
       <section className="content-section grid-split" id="quem-somos">
         <div className="image-stack">
-          <img src="http://localhost:7777/imagens/jojo.jpg" alt="Atividade do clube" />
-          <img src="http://localhost:7777/imagens/cheerleader.jpg" alt="Sessão do clube" />
+          <img src="/imagens/jojo.jpg" alt="Atividade do clube" />
+          <img src="/imagens/cheerleader.jpg" alt="Sessão do clube" />
         </div>
         <article className="text-panel">
           <h2>QUEM SOMOS?</h2>
@@ -55,7 +55,7 @@ export default function Home() {
         <h2 className="section-title">PRÓXIMO ENCONTRO</h2>
         <div className="next-meet-card">
           <div className="next-meet-poster-column">
-            <img src={proximoEncontro?.foto_capa || 'http://localhost:7777/imagens/bugonia.jpg'} alt={proximoEncontro?.tema || 'Próximo encontro'} />
+            <img src={proximoEncontro?.foto_capa || '/imagens/bugonia.jpg'} alt={proximoEncontro?.tema || 'Próximo encontro'} />
             <Link to="/encontros/proximo" className="btn-pill next-meet-cta">Saiba mais e PARTICIPE!</Link>
           </div>
           <div className="next-meet-copy">
@@ -83,13 +83,13 @@ export default function Home() {
         <h2 className="section-title light">ACERVOS</h2>
         <div className="acervo-grid">
           <Link to="/acervos/filmes" className="acervo-card">
-            <img src="http://localhost:7777/imagens/jojo.jpg" alt="Filmes e encontros" />
+            <img src="/imagens/jojo.jpg" alt="Filmes e encontros" />
             <h3>FILMES E ENCONTROS</h3>
             <p>Aqui você encontra todos os filmes e os vídeos já vistos pelo clube desde 2024.</p>
             <span className="btn-mini">ACESSAR</span>
           </Link>
           <Link to="/acervos/curtas" className="acervo-card">
-            <img src="http://localhost:7777/imagens/curtas.png" alt="Curtametragens" />
+            <img src="/imagens/curtas.png" alt="Curtametragens" />
             <h3>CURTAMETRAGENS</h3>
             <p>Aqui você encontra os curtas produzidos pelos alunos do IFC - Campus Sombrio.</p>
             <span className="btn-mini">ACESSAR</span>

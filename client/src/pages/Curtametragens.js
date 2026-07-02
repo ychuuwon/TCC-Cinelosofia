@@ -23,7 +23,7 @@ export default function Curtametragens() {
       <section className="collection-list">
         {curtas.length === 0 ? (
           <article className="collection-item">
-            <img src="http://localhost:7777/imagens/curtas.png" alt="Curta em destaque" />
+            <img src="/imagens/curtas.png" alt="Curta em destaque" />
             <div>
               <h3>Curta em destaque</h3>
               <p>Os curtas cadastrados pelo administrador aparecerão aqui.</p>
@@ -32,7 +32,7 @@ export default function Curtametragens() {
         ) : (
           curtas.map((item) => (
             <article className="collection-item" key={item._id}>
-              <img src={item.foto_capa || 'http://localhost:7777/imagens/curtas.png'} alt={item.titulo} />
+              <img src={item.foto_capa || '/imagens/curtas.png'} alt={item.titulo} />
               <div>
                 <h3>{item.titulo}</h3>
                 <p>{item.sinopse}</p>

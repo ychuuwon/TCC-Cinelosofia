@@ -82,7 +82,10 @@ export default function Register() {
           </div>
         </form>
       </section>
-      <aside className="auth-visual register-visual" />
+      <aside
+        className="auth-visual register-visual"
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/imagens/cheerleader.jpg)` }}
+      />
     </main>
   );
 }

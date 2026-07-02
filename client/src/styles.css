@@ -3,7 +3,7 @@
   --wine-dark: #701310;
   --bg-dark-red: #8B1A1A;
   --cream: #f4efdf;
-  --bg-light-cream: #FFFDF0;
+  --bg-light-cream: #8B1A1A;
   --ink: #4b241b;
   --text-dark: #2B2B2B;
   --paper: #fbf6e8;
@@ -96,6 +96,12 @@ a {
 
 .navbar-auth {
   margin-left: auto;
+}
+
+.navbar-auth .btn-login,
+.navbar-auth .btn-login:visited {
+  border-radius: 999px;
+  color: var(--text-light);
 }
 
 .btn-login,
@@ -337,6 +343,10 @@ a {
   color: var(--text-light);
 }
 
+.page-home #proximo-encontro .section-title {
+  color: var(--text-light);
+}
+
 .acervo-showcase {
   background: linear-gradient(135deg, rgba(139, 26, 26, 0.96), rgba(163, 38, 38, 0.96));
   margin-left: calc(50% - 50vw);
@@ -419,7 +429,7 @@ a {
 
 .site-footer,
 .footer {
-  background-color: var(--bg-light-cream);
+  background-color: var(--cream);
   padding: 40px 5%;
   display: flex;
   justify-content: space-between;
@@ -505,7 +515,7 @@ a {
 }
 
 .footer {
-  background-color: var(--bg-light-cream, var(--paper));
+  background-color: var(--cream, var(--bg-light-cream, var(--paper)));
   padding: 40px 5%;
   display: flex;
   justify-content: space-between;
@@ -583,11 +593,11 @@ a {
 }
 
 .login-visual {
-  background-image: url('http://localhost:7777/imagens/poderoso.jpg');
+  background-color: var(--wine);
 }
 
 .register-visual {
-  background-image: url('http://localhost:7777/imagens/cheerleader.jpg');
+  background-color: var(--wine);
 }
 
 .collection-item {

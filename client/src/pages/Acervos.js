@@ -6,14 +6,14 @@ export default function Acervos() {
       <h1>ACERVOS</h1>
       <section className="acervo-grid collection-grid">
         <Link to="/acervos/filmes" className="acervo-card">
-          <img src="http://localhost:7777/imagens/jojo.jpg" alt="Filmes e encontros" />
+          <img src="/imagens/jojo.jpg" alt="Filmes e encontros" />
           <h3>FILMES E ENCONTROS</h3>
           <p>Aqui você encontra todos os filmes e vídeos já vistos pelo clube.</p>
           <span className="btn-mini">ACESSAR</span>
         </Link>
 
         <Link to="/acervos/curtas" className="acervo-card">
-          <img src="http://localhost:7777/imagens/curtas.png" alt="Curtametragens" />
+          <img src="/imagens/curtas.png" alt="Curtametragens" />
           <h3>CURTAMETRAGENS</h3>
           <p>Aqui você encontra curtas produzidos pelos alunos do IFC - Campus Sombrio.</p>
           <span className="btn-mini">ACESSAR</span>

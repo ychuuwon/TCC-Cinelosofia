@@ -23,7 +23,7 @@ export default function FilmesEncontros() {
       <section className="collection-list">
         {acervos.length === 0 ? (
           <article className="collection-item">
-            <img src="http://localhost:7777/imagens/jojo.jpg" alt="Placeholder de acervo" />
+            <img src="/imagens/jojo.jpg" alt="Placeholder de acervo" />
             <div>
               <h3>Acervos cadastrados</h3>
               <p>Os filmes e encontros cadastrados pelo administrador aparecerão aqui.</p>
@@ -32,7 +32,7 @@ export default function FilmesEncontros() {
         ) : (
           acervos.map((item) => (
             <article className="collection-item" key={item._id}>
-              <img src={item.foto_capa || 'http://localhost:7777/imagens/jojo.jpg'} alt={item.titulo} />
+              <img src={item.foto_capa || '/imagens/jojo.jpg'} alt={item.titulo} />
               <div>
                 <h3>{item.titulo}</h3>
                 <p>{item.sinopse}</p>

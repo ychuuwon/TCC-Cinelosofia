@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AUTH_MESSAGE, isLoggedIn, storeAuthMessage } from '../auth';
 
 export default function EncontroDetalhes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -30,12 +29,6 @@ export default function EncontroDetalhes() {
   }, [id]);
 
   const handlePresenca = () => {
-    if (!isLoggedIn()) {
-      storeAuthMessage(AUTH_MESSAGE);
-      navigate('/login', { state: { mensagem: AUTH_MESSAGE } });
-      return;
-    }
-
     setMostrarFormulario((state) => !state);
   };
 
@@ -78,7 +71,7 @@ export default function EncontroDetalhes() {
       <section className="detail-card">
         <div className="detail-media">
           <div className="detail-poster">
-            <img src={encontro?.foto_capa || 'http://localhost:7777/imagens/bugonia.jpg'} alt={encontro?.tema || 'Bugonia'} />
+            <img src={encontro?.foto_capa || '/imagens/bugonia.jpg'} alt={encontro?.tema || 'Bugonia'} />
           </div>
           <div className="presence-toggle-row">
             <span className="presence-toggle-label">MARCAR PRESENÇA</span>

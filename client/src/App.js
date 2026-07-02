@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ChatButton from './components/ChatButton';
-import PrivateRoute from './components/PrivateRoute';
 
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -19,7 +18,7 @@ import NewAppointment from './pages/NewAppointment';
 import PendingAppointments from './pages/PendingAppointments';
 import CompletedAppointments from './pages/CompletedAppointments';
 import EditAppointment from './pages/EditAppointment';
-import { markLogin, markLogout, isLoggedIn } from './auth';
+import { markLogin, markLogout } from './auth';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -64,14 +63,12 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route
             path="/encontros/:id"
-            element={isLoggedIn() ? (
+            element={(
               <>
                 <Navbar token={token} user={user} onLogout={handleLogout} />
                 <EncontroDetalhes />
                 <Footer />
               </>
-            ) : (
-              <Navigate to="/login" replace state={{ mensagem: 'Você precisa realizar o login para acessar essa funcionalidade.' }} />
             )}
           />
           <Route
@@ -107,29 +104,27 @@ export default function App() {
           <Route
             path="/chat"
             element={(
-              <PrivateRoute>
+              <>
                 <Navbar token={token} user={user} onLogout={handleLogout} />
                 <Chat />
                 <Footer />
-              </PrivateRoute>
+              </>
             )}
           />
           <Route
             path="/admin/encontros/:id/presencas"
-            element={token && user?.adm ? (
+            element={(
               <>
                 <Navbar token={token} user={user} onLogout={handleLogout} />
                 <AdminPresencas />
                 <Footer />
               </>
-            ) : (
-              <Navigate to="/login" replace state={{ mensagem: 'Você precisa realizar o login para acessar essa funcionalidade.' }} />
             )}
           />
-          <Route path="/agendar" element={token ? <NewAppointment /> : <Navigate to="/login" replace state={{ mensagem: 'Você precisa realizar o login para acessar essa funcionalidade.' }} />} />
-          <Route path="/agendamentos/pendentes" element={token ? <PendingAppointments /> : <Navigate to="/login" replace state={{ mensagem: 'Você precisa realizar o login para acessar essa funcionalidade.' }} />} />
-          <Route path="/agendamentos/concluidos" element={token ? <CompletedAppointments /> : <Navigate to="/login" replace state={{ mensagem: 'Você precisa realizar o login para acessar essa funcionalidade.' }} />} />
-          <Route path="/agendamentos/editar/:id" element={token ? <EditAppointment /> : <Navigate to="/login" replace state={{ mensagem: 'Você precisa realizar o login para acessar essa funcionalidade.' }} />} />
+          <Route path="/agendar" element={<NewAppointment />} />
+          <Route path="/agendamentos/pendentes" element={<PendingAppointments />} />
+          <Route path="/agendamentos/concluidos" element={<CompletedAppointments />} />
+          <Route path="/agendamentos/editar/:id" element={<EditAppointment />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <ChatButton />

@@ -80,7 +80,10 @@ export default function Login({ onLogin }) {
           </div>
         </form>
       </section>
-      <aside className="auth-visual login-visual" />
+      <aside
+        className="auth-visual login-visual"
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/imagens/poderoso.jpg)` }}
+      />
     </main>
   );
 }

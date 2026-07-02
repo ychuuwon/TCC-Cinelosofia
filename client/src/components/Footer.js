@@ -2,7 +2,7 @@ export default function Footer() {
   return (
     <footer className="site-footer" id="contato">
       <div className="footer-brand">
-        <img src="http://localhost:7777/imagens/logo.png" alt="IFC - Campus Sombrio" />
+        <img src="/imagens/logo.png" alt="IFC - Campus Sombrio" />
       </div>
 
       <div className="footer-contact">
