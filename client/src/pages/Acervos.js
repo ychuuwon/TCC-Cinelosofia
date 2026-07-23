@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function Acervos() {
   return (
-    <main className="collection-page">
+    <main className="collection-page acervos-page">
       <h1>ACERVOS</h1>
       <section className="acervo-grid collection-grid">
         <Link to="/acervos/filmes" className="acervo-card">

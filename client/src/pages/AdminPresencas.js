@@ -41,7 +41,7 @@ export default function AdminPresencas() {
           presencas.map((presenca, index) => (
             <article className="collection-item" key={`${presenca._id || index}`}>
               <div>
-                <h3>{presenca.nome}</h3>
+                <p><strong>Nome completo:</strong> {presenca.nome}</p>
                 <p><strong>Turma:</strong> {presenca.turma}</p>
                 <p><strong>Data do registro:</strong> {presenca.data_registro ? new Date(presenca.data_registro).toLocaleString('pt-BR') : '-'}</p>
               </div>

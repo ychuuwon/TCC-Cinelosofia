@@ -9,6 +9,7 @@ export default function EncontroDetalhes() {
   const [encontro, setEncontro] = useState(null);
   const navigate = useNavigate();
   const { id } = useParams();
+  const turmasDisponiveis = ['1A', '1B', '1H', '2A', '2B', '2H', '3A', '3B', '3H', '3C'];
 
   const token = localStorage.getItem('token');
   const encontroId = encontro?._id || (id !== 'proximo' ? id : null);
@@ -67,23 +68,49 @@ export default function EncontroDetalhes() {
   };
 
   return (
-    <main className="detail-page">
+    <main className="detail-page participate-page">
+      <h1>PARTICIPE</h1>
       <section className="detail-card">
         <div className="detail-media">
           <div className="detail-poster">
             <img src={encontro?.foto_capa || '/imagens/bugonia.jpg'} alt={encontro?.tema || 'Bugonia'} />
           </div>
-          <div className="presence-toggle-row">
-            <span className="presence-toggle-label">MARCAR PRESENÇA</span>
-            <button
-              type="button"
-              className="presence-toggle-arrow"
-              onClick={handlePresenca}
-              aria-label={mostrarFormulario ? 'Ocultar formulário de presença' : 'Abrir formulário de presença'}
-              aria-expanded={mostrarFormulario}
-            >
-              <span aria-hidden="true">{mostrarFormulario ? '▾' : '▸'}</span>
-            </button>
+          <div className="presence-toggle-group">
+            <div className="presence-toggle-row">
+              <span className="presence-toggle-label">MARCAR PRESENÇA</span>
+              <button
+                type="button"
+                className="presence-toggle-arrow"
+                onClick={handlePresenca}
+                aria-label={mostrarFormulario ? 'Ocultar formulário de presença' : 'Abrir formulário de presença'}
+                aria-expanded={mostrarFormulario}
+              >
+                <span aria-hidden="true">{mostrarFormulario ? '▾' : '▸'}</span>
+              </button>
+            </div>
+
+            {mostrarFormulario && (
+              <section className="presence-form-panel">
+                <h2>PREENCHA OS DADOS ABAIXO PARA MARCAR SUA PRESENÇA:</h2>
+                <form onSubmit={handleSubmit} className="presence-form">
+                  <label htmlFor="nome">Nome:</label>
+                  <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+
+                  <label htmlFor="turma">Turma:</label>
+                  <select id="turma" value={turma} onChange={(e) => setTurma(e.target.value)} required>
+                    <option value="">Selecione sua turma</option>
+                    {turmasDisponiveis.map((opcao) => (
+                      <option key={opcao} value={opcao}>
+                        {opcao}
+                      </option>
+                    ))}
+                  </select>
+
+                  {mensagem && <p className="auth-message">{mensagem}</p>}
+                  <button type="submit" className="btn-primary btn-pill">ENVIAR</button>
+                </form>
+              </section>
+            )}
           </div>
         </div>
 
@@ -108,21 +135,6 @@ export default function EncontroDetalhes() {
         </div>
       </section>
 
-      {mostrarFormulario && (
-        <section className="presence-form-panel">
-          <h2>PREENCHA OS DADOS ABAIXO PARA MARCAR SUA PRESENÇA:</h2>
-          <form onSubmit={handleSubmit} className="presence-form">
-            <label htmlFor="nome">Nome:</label>
-            <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
-
-            <label htmlFor="turma">Turma:</label>
-            <input id="turma" value={turma} onChange={(e) => setTurma(e.target.value)} required />
-
-            {mensagem && <p className="auth-message">{mensagem}</p>}
-            <button type="submit" className="btn-primary btn-pill">ENVIAR</button>
-          </form>
-        </section>
-      )}
     </main>
   );
 }

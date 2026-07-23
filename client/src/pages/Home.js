@@ -22,15 +22,8 @@ export default function Home() {
     <main className="page-home">
       <section className="hero-panel">
         <div className="hero-copy">
-          <p className="eyebrow">Clube de Cinema e Filosofia do IFC - Campus Sombrio</p>
           <h1>PORTAL CINELOSOFIA</h1>
-          <p>
-            Clube de cinema e filosofia do IFC-Campus Sombrio
-          </p>
-          <div className="hero-actions">
-            <Link to="/encontros/proximo" className="btn-pill">PARTICIPE</Link>
-            <Link to="/acervos" className="btn-pill outline">ACERVOS</Link>
-          </div>
+          <p className="eyebrow">Clube de Cinema e Filosofia do IFC - Campus Sombrio</p>
         </div>
         <div className="hero-image">
           <img src="/imagens/encontro.png" alt="Clube Cinelosofia" />
@@ -45,8 +38,8 @@ export default function Home() {
         <article className="text-panel">
           <h2>QUEM SOMOS?</h2>
           <p>
-            O clube Cinelosofia surgiu no ano de 2024, idealizado pelas estudantes Júlia Pellin e Vitória Behncke.
-            Desde então, ocorre em encontros semanais que juntam sessões de filmes com discussões filosóficas sobre as obras vistas.
+           Idealizado a partir do amor pelo cinema e sua relação intrínsica com a filosofia, o clube nomeado "Cinelosofia" foi criado nas depêndencias do IFC - Campus Sombrio pelas estudantes Júlia Pellin e Vitória Behenck. 
+           O clube age em conjunto com as ações do Pop Philo e é representado pela Professora Mara Helfenstein.
           </p>
         </article>
       </section>
@@ -89,8 +82,8 @@ export default function Home() {
             <span className="btn-mini">ACESSAR</span>
           </Link>
           <Link to="/acervos/curtas" className="acervo-card">
-            <img src="/imagens/curtas.png" alt="Curtametragens" />
-            <h3>CURTAMETRAGENS</h3>
+            <img src="/imagens/curtas.png" alt="Curtas-Metragens" />
+            <h3>CURTAS-METRAGENS</h3>
             <p>Aqui você encontra os curtas produzidos pelos alunos do IFC - Campus Sombrio.</p>
             <span className="btn-mini">ACESSAR</span>
           </Link>

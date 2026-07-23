@@ -42,7 +42,12 @@ export default function Register() {
   return (
     <main className="auth-screen register-screen">
       <section className="auth-form-panel form-container">
+        <div className="auth-header">
+          <Link to="/" className="auth-back-link">Voltar à tela inicial</Link>
+          <p className="auth-tag">Portal Cinelosofia</p>
+        </div>
         <h2>CADASTRO:</h2>
+        <p className="auth-description">Crie seu acesso para participar das sessões, eventos e conversas do clube.</p>
         <form onSubmit={handleRegister} className="auth-form">
           <label htmlFor="matricula">Insira seu número de matrícula:</label>
           <input

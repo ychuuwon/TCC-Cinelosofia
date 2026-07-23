@@ -6,6 +6,16 @@ const presencaSchema = new mongoose.Schema({
     ref: 'Usuario',
     required: true,
   },
+  nome: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  turma: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   status: {
     type: Boolean,
     default: false,

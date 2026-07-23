@@ -50,7 +50,12 @@ export default function Login({ onLogin }) {
   return (
     <main className="auth-screen">
       <section className="auth-form-panel form-container">
+        <div className="auth-header">
+          <Link to="/" className="auth-back-link">Voltar à tela inicial</Link>
+          <p className="auth-tag">Portal Cinelosofia</p>
+        </div>
         <h2>FAÇA LOGIN OU CADASTRE-SE:</h2>
+        <p className="auth-description">Entre para acompanhar os encontros, acessar os acervos e participar do clube.</p>
         <form onSubmit={handleSubmit} className="auth-form">
           <label htmlFor="identificador">Nome de usuário ou matrícula:</label>
           <input

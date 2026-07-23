@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -127,8 +127,18 @@ export default function App() {
           <Route path="/agendamentos/editar/:id" element={<EditAppointment />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <ChatButton />
+        <ChatButtonWithVisibility />
       </div>
     </Router>
   );
+}
+
+function ChatButtonWithVisibility() {
+  const location = useLocation();
+
+  if (location.pathname === '/login' || location.pathname === '/register') {
+    return null;
+  }
+
+  return <ChatButton />;
 }

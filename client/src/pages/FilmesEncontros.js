@@ -18,7 +18,7 @@ export default function FilmesEncontros() {
   }, []);
 
   return (
-    <main className="collection-page">
+    <main className="collection-page collection-white-title">
       <h1>FILMES E ENCONTROS</h1>
       <section className="collection-list">
         {acervos.length === 0 ? (

@@ -18,7 +18,7 @@ export default function Curtametragens() {
   }, []);
 
   return (
-    <main className="collection-page">
+    <main className="collection-page collection-white-title">
       <h1>CURTAMETRAGENS</h1>
       <section className="collection-list">
         {curtas.length === 0 ? (

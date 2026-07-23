@@ -5,9 +5,15 @@ const { JWT_SECRET } = require('../config');
 
 const loginUser = async (req, res) => {
   try {
-    const { login, senha } = req.body;
+    const { matricula, nome_usuario, senha } = req.body;
 
-    const usuario = await User.findOne({ login });
+    if ((!matricula && !nome_usuario) || !senha) {
+      return res.status(400).json({ erro: 'Nome de usuário ou matrícula e senha são obrigatórios.' });
+    }
+
+    const usuario = await User.findOne(
+      matricula ? { matricula } : { nome_usuario }
+    );
     if (!usuario) {
       return res.status(404).json({ erro: 'Usuário não encontrado.' });
     }
@@ -27,7 +33,8 @@ const loginUser = async (req, res) => {
       mensagem: 'Login efetuado com sucesso!',
       usuario: {
         id: usuario._id,
-        login: usuario.login,
+        matricula: usuario.matricula,
+        nome_usuario: usuario.nome_usuario,
         adm: usuario.adm,
       },
       token,
@@ -40,15 +47,20 @@ const loginUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { login, senha, adm } = req.body;
+    const { matricula, nome_usuario, senha } = req.body;
 
-    if (!login || !senha) {
-      return res.status(400).json({ erro: 'Login e senha são obrigatórios.' });
+    if (!matricula || !nome_usuario || !senha) {
+      return res.status(400).json({ erro: 'Matrícula, nome de usuário e senha são obrigatórios.' });
     }
 
-    const usuarioExiste = await User.findOne({ login });
-    if (usuarioExiste) {
-      return res.status(400).json({ erro: 'Este usuário já está cadastrado.' });
+    const usuarioExisteMatricula = await User.findOne({ matricula });
+    if (usuarioExisteMatricula) {
+      return res.status(400).json({ erro: 'Esta matrícula já está cadastrada.' });
+    }
+
+    const usuarioExisteUsername = await User.findOne({ nome_usuario });
+    if (usuarioExisteUsername) {
+      return res.status(400).json({ erro: 'Este nome de usuário já está em uso.' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -56,16 +68,18 @@ const registerUser = async (req, res) => {
 
     const novoUsuario = await User.create({
       id: Date.now(),
-      login,
+      matricula,
+      nome_usuario,
       senha: senhaHash,
-      adm: Boolean(adm),
+      adm: false,
     });
 
     return res.status(201).json({
       mensagem: 'Usuário cadastrado com sucesso!',
       usuario: {
         id: novoUsuario._id,
-        login: novoUsuario.login,
+        matricula: novoUsuario.matricula,
+        nome_usuario: novoUsuario.nome_usuario,
         adm: novoUsuario.adm,
       },
     });
