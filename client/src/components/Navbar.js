@@ -5,6 +5,24 @@ import { isAdmin } from '../auth';
 export default function Navbar({ token, onLogout }) {
   const navigate = useNavigate();
 
+  const handleContactClick = (event) => {
+    event.preventDefault();
+
+    const scrollToFooter = () => {
+      const footer = document.getElementById('contato');
+      if (footer) {
+        footer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    if (window.location.pathname !== '/') {
+      navigate('/');
+      setTimeout(scrollToFooter, 250);
+    } else {
+      scrollToFooter();
+    }
+  };
+
   return (
     <nav className="navbar navbar-cinelosofia">
       <div className="navbar-container nav-links">
@@ -20,7 +38,7 @@ export default function Navbar({ token, onLogout }) {
           {token && isAdmin() && (
             <li><Link to="/admin/encontros/proximo/presencas">ADMIN</Link></li>
           )}
-          <li><a href="#contato">CONTATO</a></li>
+          <li><a href="/" onClick={handleContactClick}>CONTATO</a></li>
         </ul>
 
         <div className="navbar-auth">
