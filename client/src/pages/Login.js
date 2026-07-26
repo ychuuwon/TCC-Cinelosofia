@@ -22,6 +22,11 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setMensagem('');
 
+    if (/^\d+$/.test(identificador) && identificador.length !== 10) {
+      setMensagem('A matrícula deve conter exatamente 10 algarismos.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:7777/api/users/login', {
         method: 'POST',

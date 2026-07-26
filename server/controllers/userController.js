@@ -53,6 +53,14 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ erro: 'Matrícula, nome de usuário e senha são obrigatórios.' });
     }
 
+    if (!/^\d+$/.test(matricula)) {
+      return res.status(400).json({ erro: 'A matrícula deve conter apenas números.' });
+    }
+
+    if (matricula.length !== 10) {
+      return res.status(400).json({ erro: 'A matrícula deve conter exatamente 10 algarismos.' });
+    }
+
     const usuarioExisteMatricula = await User.findOne({ matricula });
     if (usuarioExisteMatricula) {
       return res.status(400).json({ erro: 'Esta matrícula já está cadastrada.' });

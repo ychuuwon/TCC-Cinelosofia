@@ -11,6 +11,9 @@ const usuarioSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
+    match: [/^\d+$/, 'A matrícula deve conter apenas números.'],
+    minlength: [10, 'A matrícula deve conter exatamente 10 algarismos.'],
+    maxlength: [10, 'A matrícula deve conter exatamente 10 algarismos.'],
   },
   nome_usuario: {
     type: String,

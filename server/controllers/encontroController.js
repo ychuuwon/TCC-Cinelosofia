@@ -44,7 +44,7 @@ const buscarPorId = async (req, res) => {
 
 const criarEncontro = async (req, res) => {
   try {
-    const { tema, data, hora, local, duracao, obs } = req.body;
+    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs } = req.body;
 
     if (!tema || !data || !hora || !local) {
       return res.status(400).json({ erro: 'Tema, data, hora e local são obrigatórios.' });
@@ -52,6 +52,11 @@ const criarEncontro = async (req, res) => {
 
     const novoEncontro = await Encontro.create({
       tema,
+      sinopse,
+      direcao,
+      ano,
+      genero,
+      foto_capa,
       data,
       hora,
       local,
@@ -72,11 +77,11 @@ const criarEncontro = async (req, res) => {
 
 const atualizarEncontro = async (req, res) => {
   try {
-    const { tema, data, hora, local, duracao, obs } = req.body;
+    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs } = req.body;
 
     const encontro = await Encontro.findByIdAndUpdate(
       req.params.id,
-      { tema, data, hora, local, duracao, obs },
+      { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs },
       { new: true }
     );
 

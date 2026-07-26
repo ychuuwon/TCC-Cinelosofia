@@ -12,6 +12,16 @@ export default function Register() {
     e.preventDefault();
     setMensagem('');
 
+    if (!/^\d+$/.test(matricula)) {
+      setMensagem('A matrícula deve conter apenas números.');
+      return;
+    }
+
+    if (matricula.length !== 10) {
+      setMensagem('A matrícula deve conter exatamente 10 algarismos.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:7777/api/users/register', {
         method: 'POST',
@@ -56,6 +66,9 @@ export default function Register() {
             placeholder="ex. 2024xxxxxx"
             value={matricula}
             onChange={(e) => setMatricula(e.target.value)}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={10}
             required
           />
 

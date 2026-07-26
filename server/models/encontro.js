@@ -32,6 +32,24 @@ const encontroSchema = new mongoose.Schema({
     required: true,
     maxlength: 100,
   },
+  sinopse: {
+    type: String,
+    maxlength: 300,
+  },
+  direcao: {
+    type: String,
+    maxlength: 100,
+  },
+  ano: {
+    type: Number,
+  },
+  genero: {
+    type: String,
+    trim: true,
+  },
+  foto_capa: {
+    type: String,
+  },
   data: {
     type: Date,
     required: true,
