@@ -7,8 +7,8 @@ export default function Footer() {
 
       <div className="footer-contact">
         <p>Entre em contato com os coordenadores do projeto em caso de dúvidas ou sugestões!</p>
-        <p><strong>Email:</strong> popphilo@ifc.edu.br</p>
-        <p><strong>Telefone:</strong> (xx) xxxx-xxxx</p>
+        <p><strong>Email:</strong> cinelosofia.ifc@gmail.com</p>
+        <p><strong>Telefone:</strong> (67) 6767-6767</p>
         <p><strong>Instagram:</strong> @popphilo_ifc</p>
       </div>
     </footer>

@@ -11,9 +11,11 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ erro: 'Nome de usuário ou matrícula e senha são obrigatórios.' });
     }
 
-    const usuario = await User.findOne(
-      matricula ? { matricula } : { nome_usuario }
-    );
+    const query = [];
+    if (matricula) query.push({ matricula });
+    if (nome_usuario) query.push({ nome_usuario });
+
+    const usuario = await User.findOne({ $or: query });
     if (!usuario) {
       return res.status(404).json({ erro: 'Usuário não encontrado.' });
     }

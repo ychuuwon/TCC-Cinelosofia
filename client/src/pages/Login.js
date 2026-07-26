@@ -27,15 +27,15 @@ export default function Login({ onLogin }) {
       return;
     }
 
+    const loginPayload = /^\d+$/.test(identificador)
+      ? { matricula: identificador, senha: password }
+      : { nome_usuario: identificador, senha: password };
+
     try {
       const response = await fetch('http://localhost:7777/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          matricula: identificador,
-          nome_usuario: identificador,
-          senha: password,
-        }),
+        body: JSON.stringify(loginPayload),
       });
 
       const data = await response.json();
