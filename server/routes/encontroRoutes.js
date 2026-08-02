@@ -5,9 +5,11 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 const {
   buscarTodos,
   buscarProximo,
+  buscarAtivo,
   buscarPorId,
   criarEncontro,
   atualizarEncontro,
+  salvarAtivo,
   deletarEncontro,
   registrarPresenca,
   listarPresencas,
@@ -16,10 +18,12 @@ const {
 // Rotas públicas
 router.get('/', buscarTodos);
 router.get('/proximo', buscarProximo);
+router.get('/ativo', buscarAtivo);
 router.get('/:id', buscarPorId);
 
 // Rotas autenticadas
 router.post('/', authMiddleware, adminMiddleware, criarEncontro);
+router.put('/ativo', authMiddleware, adminMiddleware, salvarAtivo);
 router.put('/:id', authMiddleware, adminMiddleware, atualizarEncontro);
 router.delete('/:id', authMiddleware, adminMiddleware, deletarEncontro);
 router.post('/:id/presenca', authMiddleware, registrarPresenca);

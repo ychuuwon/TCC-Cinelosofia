@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+const IMGUR_CLIENT_ID = 'SEU_CLIENT_ID';
 
 export default function NewAppointment() {
   const [servico, setServico] = useState('');
   const [data, setData] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  const [imagem, setImagem] = useState(null);
+  const [imagemUrl, setImagemUrl] = useState('');
+  const [enviandoImagem, setEnviandoImagem] = useState(false);
   const [mensagem, setMensagem] = useState('');
 
   const navigate = useNavigate();
@@ -14,6 +18,43 @@ export default function NewAppointment() {
     e.preventDefault();
     setMensagem('');
 
+    let imagemFinalUrl = '';
+
+    if (imagem) {
+      setEnviandoImagem(true);
+      setMensagem('Enviando imagem...');
+
+      try {
+        const formData = new FormData();
+        formData.append('image', imagem);
+
+        const uploadResponse = await fetch('https://api.imgur.com/3/image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+          },
+          body: formData,
+        });
+
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadResponse.ok || !uploadData?.data?.link) {
+          throw new Error(uploadData?.data?.error || 'Erro ao enviar a imagem.');
+        }
+
+        imagemFinalUrl = uploadData.data.link;
+        setImagemUrl(imagemFinalUrl);
+        window.alert('Imagem enviada com sucesso!');
+      } catch (err) {
+        console.error(err);
+        setEnviandoImagem(false);
+        setMensagem(err.message || 'Erro ao enviar a imagem');
+        return;
+      } finally {
+        setEnviandoImagem(false);
+      }
+    }
+
     try {
       const token = localStorage.getItem('token');
 
@@ -21,12 +62,13 @@ export default function NewAppointment() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           service: servico,
           date: data,
           notes: observacoes,
+          imageUrl: imagemFinalUrl || undefined,
         }),
       });
 
@@ -36,17 +78,13 @@ export default function NewAppointment() {
         return setMensagem(resData.message || 'Erro ao agendar');
       }
 
-      // Mensagem opcional (pode remover se quiser redirecionar direto)
       setMensagem('Agendamento realizado com sucesso!');
-
-      // Limpa os campos
       setServico('');
       setData('');
       setObservacoes('');
-
-      // Redireciona para a tela de agendamentos pendentes
+      setImagem(null);
+      setImagemUrl('');
       navigate('/agendamentos/pendentes');
-
     } catch (err) {
       console.error(err);
       setMensagem('Erro ao conectar com o servidor');
@@ -95,7 +133,7 @@ export default function NewAppointment() {
             />
           </div>
 
-          <div className="mb-4">
+          <div className="mb-3">
             <label className="form-label">Observações:</label>
             <textarea
               className="form-control"
@@ -105,8 +143,24 @@ export default function NewAppointment() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-100">
-            Agendar
+          <div className="mb-4">
+            <label className="form-label">Imagem (opcional):</label>
+            <input
+              type="file"
+              className="form-control"
+              accept="image/*"
+              onChange={(e) => setImagem(e.target.files[0])}
+            />
+            {imagem && <small className="text-muted d-block mt-2">Arquivo selecionado: {imagem.name}</small>}
+            {imagemUrl && (
+              <div className="mt-2">
+                <a href={imagemUrl} target="_blank" rel="noreferrer">Ver imagem enviada</a>
+              </div>
+            )}
+          </div>
+
+          <button type="submit" className="btn btn-primary w-100" disabled={enviandoImagem}>
+            {enviandoImagem ? 'Enviando imagem...' : 'Agendar'}
           </button>
         </form>
 

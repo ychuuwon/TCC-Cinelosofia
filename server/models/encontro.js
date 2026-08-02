@@ -70,6 +70,13 @@ const encontroSchema = new mongoose.Schema({
     type: String,
     maxlength: 100,
   },
+  destaque: {
+    type: Boolean,
+    default: false,
+  },
+  trailer: {
+    type: String,
+  },
   presencas: [presencaSchema],
 }, { timestamps: true });
 

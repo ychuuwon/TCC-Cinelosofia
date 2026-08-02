@@ -36,7 +36,7 @@ export default function Navbar({ token, onLogout }) {
           <li><Link to="/acervos">ACERVOS</Link></li>
           <li><Link to="/chat" className="nav-link">CHAT</Link></li>
           {token && isAdmin() && (
-            <li><Link to="/admin/encontros/proximo/presencas">ADMIN</Link></li>
+            <li><Link to="/admin">ADMIN</Link></li>
           )}
           <li><a href="/" onClick={handleContactClick}>CONTATO</a></li>
         </ul>

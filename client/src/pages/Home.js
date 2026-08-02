@@ -16,6 +16,11 @@ export default function Home() {
     };
 
     carregarEncontro();
+
+    const atualizarQuandoSalvar = () => carregarEncontro();
+    window.addEventListener('encontro-atualizado', atualizarQuandoSalvar);
+
+    return () => window.removeEventListener('encontro-atualizado', atualizarQuandoSalvar);
   }, []);
 
   return (
@@ -48,25 +53,28 @@ export default function Home() {
         <h2 className="section-title">PRÓXIMO ENCONTRO</h2>
         <div className="next-meet-card">
           <div className="next-meet-poster-column">
-            <img src={proximoEncontro?.foto_capa || '/imagens/bugonia.jpg'} alt={proximoEncontro?.tema || 'Próximo encontro'} />
+            <img src={proximoEncontro?.foto_capa || '/imagens/encontro.png'} alt={proximoEncontro?.tema || 'Próximo encontro'} />
             <Link to="/encontros/proximo" className="btn-pill next-meet-cta">Saiba mais e PARTICIPE!</Link>
           </div>
           <div className="next-meet-copy">
             <div className="next-meet-content">
-              <h3>{proximoEncontro?.tema || 'BUGONIA'}</h3>
+              <h3>{proximoEncontro?.tema || 'Nenhum encontro cadastrado'}</h3>
               <p>
-                {proximoEncontro?.obs || 'A história acompanha dois jovens conspiracionistas que sequestram a poderosa CEO de uma grande indústria farmacêutica, convencidos de que ela é uma alienígena infiltrada com planos para destruir o planeta Terra.'}
+                {proximoEncontro?.sinopse || proximoEncontro?.obs || 'Quando o administrador cadastrar um encontro, as informações aparecerão aqui automaticamente.'}
               </p>
-              <p><strong>Ano de lançamento:</strong> {proximoEncontro?.ano || '2025'}</p>
-              <p><strong>Direção:</strong> {proximoEncontro?.direcao || 'Yorgos Lanthimos'}</p>
-              <p><strong>Gênero:</strong> {proximoEncontro?.genero || 'Suspense; Ficção Científica;'}</p>
+              {proximoEncontro?.ano && <p><strong>Ano de lançamento:</strong> {proximoEncontro.ano}</p>}
+              {proximoEncontro?.direcao && <p><strong>Direção:</strong> {proximoEncontro.direcao}</p>}
+              {proximoEncontro?.genero && <p><strong>Gênero:</strong> {proximoEncontro.genero}</p>}
             </div>
             <div className="next-meet-meta">
-              <p><strong>Data:</strong> {proximoEncontro?.data ? new Date(proximoEncontro.data).toLocaleDateString('pt-BR') : '15/09'}</p>
-              <p><strong>Hora:</strong> {proximoEncontro?.hora || '15h'}</p>
-              <p><strong>Local:</strong> {proximoEncontro?.local || 'Sala 25A - IFC Campus Sombrio'}</p>
-              <p><strong>Duração:</strong> {proximoEncontro?.duracao || '2h'}</p>
-              <p><strong>OBS:</strong> {proximoEncontro?.obs || 'Serão ofertados pipoca e café por conta do clube nessa sessão!'}</p>
+              {proximoEncontro?.data && <p><strong>Data:</strong> {new Date(proximoEncontro.data).toLocaleDateString('pt-BR')}</p>}
+              {proximoEncontro?.hora && <p><strong>Hora:</strong> {proximoEncontro.hora}</p>}
+              {proximoEncontro?.local && <p><strong>Local:</strong> {proximoEncontro.local}</p>}
+              {proximoEncontro?.duracao && <p><strong>Duração:</strong> {proximoEncontro.duracao}</p>}
+              {proximoEncontro?.obs && <p><strong>OBS:</strong> {proximoEncontro.obs}</p>}
+              {proximoEncontro?.trailer && (
+                <p><strong>Trailer:</strong> <a href={proximoEncontro.trailer} target="_blank" rel="noreferrer">Assistir trailer</a></p>
+              )}
             </div>
           </div>
         </div>

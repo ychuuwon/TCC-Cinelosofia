@@ -18,6 +18,7 @@ import NewAppointment from './pages/NewAppointment';
 import PendingAppointments from './pages/PendingAppointments';
 import CompletedAppointments from './pages/CompletedAppointments';
 import EditAppointment from './pages/EditAppointment';
+import AdminDashboard from './pages/AdminDashboard';
 import { markLogin, markLogout } from './auth';
 
 export default function App() {
@@ -112,12 +113,20 @@ export default function App() {
             )}
           />
           <Route
+            path="/admin"
+            element={(
+              <>
+                <Navbar token={token} user={user} onLogout={handleLogout} />
+                <AdminDashboard />
+              </>
+            )}
+          />
+          <Route
             path="/admin/encontros/:id/presencas"
             element={(
               <>
                 <Navbar token={token} user={user} onLogout={handleLogout} />
                 <AdminPresencas />
-                <Footer />
               </>
             )}
           />

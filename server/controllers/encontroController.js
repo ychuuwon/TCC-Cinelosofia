@@ -12,19 +12,33 @@ const buscarTodos = async (req, res) => {
 
 const buscarProximo = async (req, res) => {
   try {
-    const proximoEncontro = await Encontro.findOne({
-      data: { $gte: new Date() },
-    }).sort({ data: 1 });
+    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
 
-    if (!proximoEncontro) {
-      const ultimo = await Encontro.findOne().sort({ createdAt: -1 });
-      return res.status(200).json(ultimo || {});
+    if (encontroAtual) {
+      return res.status(200).json(encontroAtual);
     }
 
-    return res.status(200).json(proximoEncontro);
+    const encontroMaisRecente = await Encontro.findOne().sort({ createdAt: -1 });
+    return res.status(200).json(encontroMaisRecente || {});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao carregar o próximo encontro.' });
+  }
+};
+
+const buscarAtivo = async (req, res) => {
+  try {
+    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
+
+    if (encontroAtual) {
+      return res.status(200).json(encontroAtual);
+    }
+
+    const encontroMaisRecente = await Encontro.findOne().sort({ createdAt: -1 });
+    return res.status(200).json(encontroMaisRecente || {});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao carregar o encontro ativo.' });
   }
 };
 
@@ -44,11 +58,13 @@ const buscarPorId = async (req, res) => {
 
 const criarEncontro = async (req, res) => {
   try {
-    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs } = req.body;
+    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer } = req.body;
 
     if (!tema || !data || !hora || !local) {
       return res.status(400).json({ erro: 'Tema, data, hora e local são obrigatórios.' });
     }
+
+    await Encontro.updateMany({}, { $set: { destaque: false } });
 
     const novoEncontro = await Encontro.create({
       tema,
@@ -62,6 +78,8 @@ const criarEncontro = async (req, res) => {
       local,
       duracao,
       obs,
+      destaque: true,
+      trailer,
       presencas: [],
     });
 
@@ -77,11 +95,13 @@ const criarEncontro = async (req, res) => {
 
 const atualizarEncontro = async (req, res) => {
   try {
-    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs } = req.body;
+    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer } = req.body;
+
+    await Encontro.updateMany({ _id: { $ne: req.params.id } }, { $set: { destaque: false } });
 
     const encontro = await Encontro.findByIdAndUpdate(
       req.params.id,
-      { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs },
+      { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer, destaque: true },
       { new: true }
     );
 
@@ -96,6 +116,57 @@ const atualizarEncontro = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao atualizar encontro.' });
+  }
+};
+
+const salvarAtivo = async (req, res) => {
+  try {
+    const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer } = req.body;
+
+    if (!tema || !data || !hora || !local) {
+      return res.status(400).json({ erro: 'Tema, data, hora e local são obrigatórios.' });
+    }
+
+    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
+    await Encontro.updateMany({}, { $set: { destaque: false } });
+
+    if (encontroAtual) {
+      const encontroAtualizado = await Encontro.findByIdAndUpdate(
+        encontroAtual._id,
+        { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer, destaque: true },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        mensagem: 'Encontro ativo atualizado com sucesso!',
+        encontro: encontroAtualizado,
+      });
+    }
+
+    const novoEncontro = await Encontro.create({
+      tema,
+      sinopse,
+      direcao,
+      ano,
+      genero,
+      foto_capa,
+      data,
+      hora,
+      local,
+      duracao,
+      obs,
+      trailer,
+      destaque: true,
+      presencas: [],
+    });
+
+    return res.status(201).json({
+      mensagem: 'Encontro ativo criado com sucesso!',
+      encontro: novoEncontro,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao salvar encontro ativo.' });
   }
 };
 
@@ -162,9 +233,11 @@ const listarPresencas = async (req, res) => {
 module.exports = {
   buscarTodos,
   buscarProximo,
+  buscarAtivo,
   buscarPorId,
   criarEncontro,
   atualizarEncontro,
+  salvarAtivo,
   deletarEncontro,
   registrarPresenca,
   listarPresencas,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 export default function EncontroDetalhes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -7,7 +7,6 @@ export default function EncontroDetalhes() {
   const [turma, setTurma] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [encontro, setEncontro] = useState(null);
-  const navigate = useNavigate();
   const { id } = useParams();
   const turmasDisponiveis = ['1A', '1B', '1H', '2A', '2B', '2H', '3A', '3B', '3H', '3C'];
 
@@ -27,6 +26,11 @@ export default function EncontroDetalhes() {
     };
 
     carregarEncontro();
+
+    const atualizarQuandoSalvar = () => carregarEncontro();
+    window.addEventListener('encontro-atualizado', atualizarQuandoSalvar);
+
+    return () => window.removeEventListener('encontro-atualizado', atualizarQuandoSalvar);
   }, [id]);
 
   const handlePresenca = () => {
@@ -73,7 +77,7 @@ export default function EncontroDetalhes() {
       <section className="detail-card">
         <div className="detail-media">
           <div className="detail-poster">
-            <img src={encontro?.foto_capa || '/imagens/bugonia.jpg'} alt={encontro?.tema || 'Bugonia'} />
+            <img src={encontro?.foto_capa || '/imagens/encontro.png'} alt={encontro?.tema || 'Próximo encontro'} />
           </div>
           <div className="presence-toggle-group">
             <div className="presence-toggle-row">
@@ -116,21 +120,24 @@ export default function EncontroDetalhes() {
 
         <div className="detail-copy">
           <div className="detail-info detail-info-main">
-            <h1>{encontro?.tema || 'BUGONIA'}</h1>
+            <h1>{encontro?.tema || 'Nenhum encontro cadastrado'}</h1>
             <p>
-              {encontro?.obs || 'A história acompanha dois jovens conspiracionistas que sequestram a poderosa CEO de uma grande indústria farmacêutica, convencidos de que ela é uma alienígena infiltrada com planos para destruir o planeta Terra.'}
+              {encontro?.sinopse || encontro?.obs || 'Quando o administrador cadastrar um encontro, as informações aparecerão aqui automaticamente.'}
             </p>
-            <p><strong>Ano de lançamento:</strong> {encontro?.ano || '2025'}</p>
-            <p><strong>Direção:</strong> {encontro?.direcao || 'Yorgos Lanthimos'}</p>
-            <p><strong>Gênero:</strong> {encontro?.genero || 'Suspense; Ficção Científica;'}</p>
+            {encontro?.ano && <p><strong>Ano de lançamento:</strong> {encontro.ano}</p>}
+            {encontro?.direcao && <p><strong>Direção:</strong> {encontro.direcao}</p>}
+            {encontro?.genero && <p><strong>Gênero:</strong> {encontro.genero}</p>}
           </div>
 
           <div className="detail-info detail-info-meta">
-            <p><strong>Data:</strong> {encontro?.data ? new Date(encontro.data).toLocaleDateString('pt-BR') : '15/09'}</p>
-            <p><strong>Hora:</strong> {encontro?.hora || '15h'}</p>
-            <p><strong>Local:</strong> {encontro?.local || 'Sala 25A - IFC Campus Sombrio'}</p>
-            <p><strong>Duração:</strong> {encontro?.duracao || '2h'}</p>
-            <p><strong>OBS:</strong> {encontro?.obs || 'Serão ofertados pipoca e café por conta do clube nessa sessão!'}</p>
+            {encontro?.data && <p><strong>Data:</strong> {new Date(encontro.data).toLocaleDateString('pt-BR')}</p>}
+            {encontro?.hora && <p><strong>Hora:</strong> {encontro.hora}</p>}
+            {encontro?.local && <p><strong>Local:</strong> {encontro.local}</p>}
+            {encontro?.duracao && <p><strong>Duração:</strong> {encontro.duracao}</p>}
+            {encontro?.obs && <p><strong>OBS:</strong> {encontro.obs}</p>}
+            {encontro?.trailer && (
+              <p><strong>Trailer:</strong> <a href={encontro.trailer} target="_blank" rel="noreferrer">Assistir trailer</a></p>
+            )}
           </div>
         </div>
       </section>
