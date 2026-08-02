@@ -1,4 +1,5 @@
 const Encontro = require('../models/encontro');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const buscarTodos = async (req, res) => {
   try {
@@ -64,6 +65,13 @@ const criarEncontro = async (req, res) => {
       return res.status(400).json({ erro: 'Tema, data, hora e local são obrigatórios.' });
     }
 
+    let fotoCapaUrl = foto_capa;
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      fotoCapaUrl = result.secure_url;
+    }
+
     await Encontro.updateMany({}, { $set: { destaque: false } });
 
     const novoEncontro = await Encontro.create({
@@ -72,7 +80,7 @@ const criarEncontro = async (req, res) => {
       direcao,
       ano,
       genero,
-      foto_capa,
+      foto_capa: fotoCapaUrl,
       data,
       hora,
       local,
@@ -97,11 +105,18 @@ const atualizarEncontro = async (req, res) => {
   try {
     const { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer } = req.body;
 
+    let fotoCapaUrl = foto_capa;
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      fotoCapaUrl = result.secure_url;
+    }
+
     await Encontro.updateMany({ _id: { $ne: req.params.id } }, { $set: { destaque: false } });
 
     const encontro = await Encontro.findByIdAndUpdate(
       req.params.id,
-      { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer, destaque: true },
+      { tema, sinopse, direcao, ano, genero, foto_capa: fotoCapaUrl, data, hora, local, duracao, obs, trailer, destaque: true },
       { new: true }
     );
 
@@ -127,13 +142,20 @@ const salvarAtivo = async (req, res) => {
       return res.status(400).json({ erro: 'Tema, data, hora e local são obrigatórios.' });
     }
 
+    let fotoCapaUrl = foto_capa;
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      fotoCapaUrl = result.secure_url;
+    }
+
     const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
     await Encontro.updateMany({}, { $set: { destaque: false } });
 
     if (encontroAtual) {
       const encontroAtualizado = await Encontro.findByIdAndUpdate(
         encontroAtual._id,
-        { tema, sinopse, direcao, ano, genero, foto_capa, data, hora, local, duracao, obs, trailer, destaque: true },
+        { tema, sinopse, direcao, ano, genero, foto_capa: fotoCapaUrl, data, hora, local, duracao, obs, trailer, destaque: true },
         { new: true }
       );
 
@@ -149,7 +171,7 @@ const salvarAtivo = async (req, res) => {
       direcao,
       ano,
       genero,
-      foto_capa,
+      foto_capa: fotoCapaUrl,
       data,
       hora,
       local,

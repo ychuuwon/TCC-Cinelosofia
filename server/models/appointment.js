@@ -24,6 +24,10 @@ const appointmentSchema = new mongoose.Schema({
     enum: ['pendente', 'concluido', 'cancelado'],
     default: 'pendente',
   },
+  imageUrl: {
+    type: String,
+    default: '',
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

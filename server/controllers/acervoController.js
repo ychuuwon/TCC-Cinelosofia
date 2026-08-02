@@ -1,4 +1,5 @@
 const Acervo = require('../models/acervo');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const buscarTodos = async (req, res) => {
   try {
@@ -44,6 +45,13 @@ const criarAcervo = async (req, res) => {
       return res.status(400).json({ erro: 'Tipo deve ser "cine" ou "curta".' });
     }
 
+    let fotoCapaUrl = foto_capa;
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      fotoCapaUrl = result.secure_url;
+    }
+
     const novoAcervo = await Acervo.create({
       tipo,
       titulo,
@@ -53,7 +61,7 @@ const criarAcervo = async (req, res) => {
       duracao,
       genero,
       class_etaria,
-      foto_capa,
+      foto_capa: fotoCapaUrl,
       tema,
       autores,
       elenco,
@@ -74,9 +82,16 @@ const atualizarAcervo = async (req, res) => {
   try {
     const { tipo, titulo, sinopse, direcao, ano, duracao, genero, class_etaria, foto_capa, tema, autores, elenco, link_video } = req.body;
 
+    let fotoCapaUrl = foto_capa;
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      fotoCapaUrl = result.secure_url;
+    }
+
     const acervo = await Acervo.findByIdAndUpdate(
       req.params.id,
-      { tipo, titulo, sinopse, direcao, ano, duracao, genero, class_etaria, foto_capa, tema, autores, elenco, link_video },
+      { tipo, titulo, sinopse, direcao, ano, duracao, genero, class_etaria, foto_capa: fotoCapaUrl, tema, autores, elenco, link_video },
       { new: true }
     ).populate('genero', 'descricao');
 

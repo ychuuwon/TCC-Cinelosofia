@@ -1,11 +1,19 @@
 const Appointment = require('../models/appointment');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const createAppointment = async (req, res) => {
   try {
-    const { service, date, notes } = req.body;
+    const { service, date, notes, imageUrl } = req.body;
 
     if (!service || !date) {
       return res.status(400).json({ erro: 'Serviço e data são obrigatórios.' });
+    }
+
+    let finalImageUrl = imageUrl || '';
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      finalImageUrl = result.secure_url;
     }
 
     const appointment = await Appointment.create({
@@ -13,6 +21,7 @@ const createAppointment = async (req, res) => {
       service,
       date,
       notes,
+      imageUrl: finalImageUrl,
     });
 
     return res.status(201).json({
@@ -79,12 +88,18 @@ const updateAppointment = async (req, res) => {
     }
 
     const updateData = {};
-    const { service, date, notes, status } = req.body;
+    const { service, date, notes, status, imageUrl } = req.body;
 
     if (service !== undefined) updateData.service = service;
     if (date !== undefined) updateData.date = date;
     if (notes !== undefined) updateData.notes = notes;
     if (status !== undefined) updateData.status = status;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+      updateData.imageUrl = result.secure_url;
+    }
 
     const updatedAppointment = await Appointment.findByIdAndUpdate(req.params.id, updateData, { new: true });
 

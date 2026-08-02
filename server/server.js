@@ -2,8 +2,11 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const connectDB = require('./mongo');
+const { PORT } = require('./config');
+const { uploadToCloudinary } = require('./utils/cloudinary');
 const userRoutes = require('./routes/userRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const encontroRoutes = require('./routes/encontroRoutes');
@@ -11,13 +14,32 @@ const acervoRoutes = require('./routes/acervoRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const generoRoutes = require('./routes/generoRoutes');
 const User = require('./models/User');
-const { PORT } = require('./config');
 
 const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/imagens', express.static(path.join(__dirname, '..', 'imagens')));
+
+app.post('/api/upload', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ erro: 'Arquivo de imagem é obrigatório.' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+
+    return res.status(200).json({
+      mensagem: 'Imagem enviada com sucesso.',
+      url: result.secure_url,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: error.message || 'Erro ao enviar imagem para o Cloudinary.' });
+  }
+});
 
 app.use('/api/users', userRoutes);
 app.use('/api/agendamentos', appointmentRoutes);
