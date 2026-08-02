@@ -53,7 +53,9 @@ export default function Home() {
         <h2 className="section-title">PRÓXIMO ENCONTRO</h2>
         <div className="next-meet-card">
           <div className="next-meet-poster-column">
-            <img src={proximoEncontro?.foto_capa || '/imagens/encontro.png'} alt={proximoEncontro?.tema || 'Próximo encontro'} />
+            {proximoEncontro?.foto_capa ? (
+              <img src={proximoEncontro.foto_capa} alt={proximoEncontro?.tema || 'Próximo encontro'} />
+            ) : null}
             <Link to="/encontros/proximo" className="btn-pill next-meet-cta">Saiba mais e PARTICIPE!</Link>
           </div>
           <div className="next-meet-copy">

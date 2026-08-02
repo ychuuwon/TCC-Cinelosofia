@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-const IMGUR_CLIENT_ID = 'SEU_CLIENT_ID';
-
 export default function NewAppointment() {
   const [servico, setServico] = useState('');
   const [data, setData] = useState('');
@@ -13,6 +11,33 @@ export default function NewAppointment() {
   const [mensagem, setMensagem] = useState('');
 
   const navigate = useNavigate();
+
+  const uploadImagemCloudinary = async (arquivo) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      throw new Error('Você precisa estar autenticado para enviar uma imagem.');
+    }
+
+    const formData = new FormData();
+    formData.append('image', arquivo);
+
+    const response = await fetch('http://localhost:7777/api/upload', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.erro || 'Erro ao enviar a imagem.');
+    }
+
+    return data.url || '';
+  };
 
   const handleAgendar = async (e) => {
     e.preventDefault();
@@ -25,26 +50,9 @@ export default function NewAppointment() {
       setMensagem('Enviando imagem...');
 
       try {
-        const formData = new FormData();
-        formData.append('image', imagem);
-
-        const uploadResponse = await fetch('https://api.imgur.com/3/image', {
-          method: 'POST',
-          headers: {
-            Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
-          },
-          body: formData,
-        });
-
-        const uploadData = await uploadResponse.json();
-
-        if (!uploadResponse.ok || !uploadData?.data?.link) {
-          throw new Error(uploadData?.data?.error || 'Erro ao enviar a imagem.');
-        }
-
-        imagemFinalUrl = uploadData.data.link;
+        imagemFinalUrl = await uploadImagemCloudinary(imagem);
         setImagemUrl(imagemFinalUrl);
-        window.alert('Imagem enviada com sucesso!');
+        setMensagem('Imagem enviada com sucesso!');
       } catch (err) {
         console.error(err);
         setEnviandoImagem(false);

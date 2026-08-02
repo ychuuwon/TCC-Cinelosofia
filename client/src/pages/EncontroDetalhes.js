@@ -77,7 +77,9 @@ export default function EncontroDetalhes() {
       <section className="detail-card">
         <div className="detail-media">
           <div className="detail-poster">
-            <img src={encontro?.foto_capa || '/imagens/encontro.png'} alt={encontro?.tema || 'Próximo encontro'} />
+            {encontro?.foto_capa ? (
+              <img src={encontro.foto_capa} alt={encontro?.tema || 'Próximo encontro'} />
+            ) : null}
           </div>
           <div className="presence-toggle-group">
             <div className="presence-toggle-row">

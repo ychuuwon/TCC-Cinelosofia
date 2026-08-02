@@ -88,7 +88,11 @@ export default function AdminDashboard() {
   const [loadingEncontro, setLoadingEncontro] = useState(true);
   const [salvandoEncontro, setSalvandoEncontro] = useState(false);
   const [novoEncontro, setNovoEncontro] = useState(emptyEncontro);
-  const [novoAcervo, setNovoAcervo] = useState({ tipo: 'curta', titulo: '', descricao: '', link: '' });
+  const [novoAcervo, setNovoAcervo] = useState({ tipo: 'curta', titulo: '', descricao: '', link: '', foto_capa: '' });
+  const [imagemEncontroFile, setImagemEncontroFile] = useState(null);
+  const [uploadingImagemEncontro, setUploadingImagemEncontro] = useState(false);
+  const [imagemAcervoFile, setImagemAcervoFile] = useState(null);
+  const [uploadingImagemAcervo, setUploadingImagemAcervo] = useState(false);
 
   useEffect(() => {
     saveState(state);
@@ -154,6 +158,33 @@ export default function AdminDashboard() {
     }
   };
 
+  const uploadImagemCloudinary = async (arquivo) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      throw new Error('Você precisa estar autenticado para enviar uma imagem.');
+    }
+
+    const formData = new FormData();
+    formData.append('image', arquivo);
+
+    const response = await fetch('http://localhost:7777/api/upload', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.erro || 'Não foi possível enviar a imagem.');
+    }
+
+    return data.url || '';
+  };
+
   const handleSalvarEncontro = async (event) => {
     event.preventDefault();
     setMensagemAdmin('');
@@ -164,8 +195,15 @@ export default function AdminDashboard() {
     }
 
     setSalvandoEncontro(true);
+    setUploadingImagemEncontro(Boolean(imagemEncontroFile));
 
     try {
+      let fotoCapaFinal = novoEncontro.foto_capa;
+
+      if (imagemEncontroFile) {
+        fotoCapaFinal = await uploadImagemCloudinary(imagemEncontroFile);
+      }
+
       const token = localStorage.getItem('token');
       const payload = {
         tema: novoEncontro.tema,
@@ -173,7 +211,7 @@ export default function AdminDashboard() {
         direcao: novoEncontro.direcao,
         ano: novoEncontro.ano,
         genero: novoEncontro.genero,
-        foto_capa: novoEncontro.foto_capa,
+        foto_capa: fotoCapaFinal,
         data: novoEncontro.data,
         hora: novoEncontro.hora,
         local: novoEncontro.local,
@@ -204,10 +242,12 @@ export default function AdminDashboard() {
       setNovoEncontro(encontroNormalizado.values);
       setMensagemAdmin('Encontro salvo com sucesso. A home e PARTICIPE foram atualizadas.');
       sincronizarEncontroPublico();
+      setImagemEncontroFile(null);
     } catch (error) {
       setMensagemAdmin(error.message || 'Erro ao salvar encontro.');
     } finally {
       setSalvandoEncontro(false);
+      setUploadingImagemEncontro(false);
     }
   };
 
@@ -218,23 +258,40 @@ export default function AdminDashboard() {
     }));
   };
 
-  const handleAddAcervo = (event) => {
+  const handleAddAcervo = async (event) => {
     event.preventDefault();
 
     if (!novoAcervo.titulo) {
       return;
     }
 
-    const item = {
-      id: Date.now(),
-      tipo: novoAcervo.tipo,
-      titulo: novoAcervo.titulo,
-      descricao: novoAcervo.descricao,
-      link: novoAcervo.link,
-    };
+    setUploadingImagemAcervo(Boolean(imagemAcervoFile));
 
-    setState((prev) => ({ ...prev, acervos: [item, ...prev.acervos] }));
-    setNovoAcervo({ tipo: 'curta', titulo: '', descricao: '', link: '' });
+    try {
+      let fotoCapaFinal = novoAcervo.foto_capa;
+
+      if (imagemAcervoFile) {
+        fotoCapaFinal = await uploadImagemCloudinary(imagemAcervoFile);
+      }
+
+      const item = {
+        id: Date.now(),
+        tipo: novoAcervo.tipo,
+        titulo: novoAcervo.titulo,
+        descricao: novoAcervo.descricao,
+        link: novoAcervo.link,
+        foto_capa: fotoCapaFinal,
+      };
+
+      setState((prev) => ({ ...prev, acervos: [item, ...prev.acervos] }));
+      setMensagemAdmin('Acervo adicionado com sucesso.');
+      setNovoAcervo({ tipo: 'curta', titulo: '', descricao: '', link: '', foto_capa: '' });
+      setImagemAcervoFile(null);
+    } catch (error) {
+      setMensagemAdmin(error.message || 'Erro ao adicionar acervo.');
+    } finally {
+      setUploadingImagemAcervo(false);
+    }
   };
 
   const atualizarDenuncia = (id, novoStatus) => {
@@ -337,11 +394,13 @@ export default function AdminDashboard() {
                   value={novoEncontro.genero}
                   onChange={(event) => setNovoEncontro((prev) => ({ ...prev, genero: event.target.value }))}
                 />
+                <label className="auth-description" style={{ marginTop: '0.25rem' }}>
+                  Imagem de capa (opcional)
+                </label>
                 <input
-                  type="url"
-                  placeholder="URL da imagem de capa"
-                  value={novoEncontro.foto_capa}
-                  onChange={(event) => setNovoEncontro((prev) => ({ ...prev, foto_capa: event.target.value }))}
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setImagemEncontroFile(event.target.files?.[0] || null)}
                 />
                 <input
                   type="date"
@@ -380,8 +439,8 @@ export default function AdminDashboard() {
                   value={novoEncontro.trailer}
                   onChange={(event) => setNovoEncontro((prev) => ({ ...prev, trailer: event.target.value }))}
                 />
-                <button type="submit" className="btn-primary" disabled={salvandoEncontro}>
-                  {salvandoEncontro ? 'Salvando...' : 'Salvar encontro'}
+                <button type="submit" className="btn-primary" disabled={salvandoEncontro || uploadingImagemEncontro}>
+                  {salvandoEncontro || uploadingImagemEncontro ? 'Salvando...' : 'Salvar encontro'}
                 </button>
               </form>
 
@@ -448,7 +507,17 @@ export default function AdminDashboard() {
                   value={novoAcervo.link}
                   onChange={(event) => setNovoAcervo((prev) => ({ ...prev, link: event.target.value }))}
                 />
-                <button type="submit" className="btn-primary">Adicionar ao acervo</button>
+                <label className="auth-description" style={{ marginTop: '0.25rem' }}>
+                  Imagem de capa do acervo (opcional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setImagemAcervoFile(event.target.files?.[0] || null)}
+                />
+                <button type="submit" className="btn-primary" disabled={uploadingImagemAcervo}>
+                  {uploadingImagemAcervo ? 'Enviando imagem...' : 'Adicionar ao acervo'}
+                </button>
               </form>
 
               <div className="admin-list">

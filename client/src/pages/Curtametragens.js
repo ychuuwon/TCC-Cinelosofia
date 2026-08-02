@@ -32,7 +32,9 @@ export default function Curtametragens() {
         ) : (
           curtas.map((item) => (
             <article className="collection-item" key={item._id}>
-              <img src={item.foto_capa || '/imagens/curtas.png'} alt={item.titulo} />
+              {item.foto_capa ? (
+                <img src={item.foto_capa} alt={item.titulo} />
+              ) : null}
               <div>
                 <h3>{item.titulo}</h3>
                 <p>{item.sinopse}</p>
