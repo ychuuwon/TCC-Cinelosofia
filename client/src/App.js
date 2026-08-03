@@ -14,10 +14,6 @@ import FilmesEncontros from './pages/FilmesEncontros';
 import Curtametragens from './pages/Curtametragens';
 import Chat from './pages/Chat';
 import AdminPresencas from './pages/AdminPresencas';
-import NewAppointment from './pages/NewAppointment';
-import PendingAppointments from './pages/PendingAppointments';
-import CompletedAppointments from './pages/CompletedAppointments';
-import EditAppointment from './pages/EditAppointment';
 import AdminDashboard from './pages/AdminDashboard';
 import { markLogin, markLogout } from './auth';
 
@@ -130,10 +126,6 @@ export default function App() {
               </>
             )}
           />
-          <Route path="/agendar" element={<NewAppointment />} />
-          <Route path="/agendamentos/pendentes" element={<PendingAppointments />} />
-          <Route path="/agendamentos/concluidos" element={<CompletedAppointments />} />
-          <Route path="/agendamentos/editar/:id" element={<EditAppointment />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <ChatButtonWithVisibility />

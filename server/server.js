@@ -8,7 +8,6 @@ const connectDB = require('./mongo');
 const { PORT } = require('./config');
 const { uploadToCloudinary } = require('./utils/cloudinary');
 const userRoutes = require('./routes/userRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes');
 const encontroRoutes = require('./routes/encontroRoutes');
 const acervoRoutes = require('./routes/acervoRoutes');
 const chatRoutes = require('./routes/chatRoutes');
@@ -42,7 +41,6 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 });
 
 app.use('/api/users', userRoutes);
-app.use('/api/agendamentos', appointmentRoutes);
 app.use('/api/encontros', encontroRoutes);
 app.use('/api/acervos', acervoRoutes);
 app.use('/api/chat', chatRoutes);
