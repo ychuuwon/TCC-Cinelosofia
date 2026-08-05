@@ -10,6 +10,7 @@ const { uploadToCloudinary } = require('./utils/cloudinary');
 const userRoutes = require('./routes/userRoutes');
 const encontroRoutes = require('./routes/encontroRoutes');
 const acervoRoutes = require('./routes/acervoRoutes');
+const registroEncontroRoutes = require('./routes/registroEncontroRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const generoRoutes = require('./routes/generoRoutes');
 const User = require('./models/User');
@@ -43,6 +44,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/encontros', encontroRoutes);
 app.use('/api/acervos', acervoRoutes);
+app.use('/api/registros-encontros', registroEncontroRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/generos', generoRoutes);
 

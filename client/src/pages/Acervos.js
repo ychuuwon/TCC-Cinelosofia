@@ -5,10 +5,10 @@ export default function Acervos() {
     <main className="collection-page acervos-page">
       <h1>ACERVOS</h1>
       <section className="acervo-grid collection-grid">
-        <Link to="/acervos/filmes" className="acervo-card">
-          <img src="/imagens/jojo.jpg" alt="Filmes e encontros" />
-          <h3>FILMES E ENCONTROS</h3>
-          <p>Aqui você encontra todos os filmes e vídeos já vistos pelo clube.</p>
+        <Link to="/acervos/encontros" className="acervo-card">
+          <img src="/imagens/jojo.jpg" alt="Registros de encontros" />
+          <h3>REGISTROS DE ENCONTROS</h3>
+          <p>Aqui você encontra os encontros já publicados com seus dados completos e questões de discussão.</p>
           <span className="btn-mini">ACESSAR</span>
         </Link>
 

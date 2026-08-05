@@ -85,10 +85,10 @@ export default function Home() {
       <section className="content-section acervo-showcase" id="acervos">
         <h2 className="section-title light">ACERVOS</h2>
         <div className="acervo-grid">
-          <Link to="/acervos/filmes" className="acervo-card">
+          <Link to="/acervos/encontros" className="acervo-card">
             <img src="/imagens/jojo.jpg" alt="Filmes e encontros" />
-            <h3>FILMES E ENCONTROS</h3>
-            <p>Aqui você encontra todos os filmes e os vídeos já vistos pelo clube desde 2024.</p>
+            <h3>REGISTROS DE ENCONTROS</h3>
+            <p>Aqui você encontra os encontros publicados com todas as informações originalmente cadastradas.</p>
             <span className="btn-mini">ACESSAR</span>
           </Link>
           <Link to="/acervos/curtas" className="acervo-card">

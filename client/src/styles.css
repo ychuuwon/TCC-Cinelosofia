@@ -327,19 +327,30 @@ a {
 
 .next-meet-card {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
   padding: 16px;
   gap: 16px;
   box-shadow: var(--panel-shadow);
+  align-items: stretch;
 }
 
 .next-meet-poster-column {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
 }
 
 .next-meet-poster-column img {
+  width: 100%;
+  display: block;
+  margin-top: 28px;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+  max-height: 620px;
+  background: #fff8ee;
+  object-position: center;
+  padding: 10px;
   border-radius: 18px;
 }
 
@@ -362,12 +373,24 @@ a {
   border: 8px solid var(--wine);
   border-radius: 14px;
   box-shadow: var(--panel-shadow);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.next-meet-content,
+.next-meet-meta,
+.detail-info-main,
+.detail-info-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
 }
 
 .next-meet-content h3,
 .next-meet-content h2 {
   color: var(--text-light);
-  margin-bottom: 16px;
+  margin-bottom: 6px;
   font-weight: bold;
 }
 
@@ -717,6 +740,157 @@ a {
   box-shadow: var(--panel-shadow);
 }
 
+.collection-list {
+  display: grid;
+  gap: 18px;
+}
+
+.collection-detail-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: 18px;
+  align-items: stretch;
+  background: var(--paper);
+  border: 8px solid var(--wine);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--panel-shadow);
+}
+
+.collection-detail-card img {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.collection-detail-copy {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.collection-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.collection-detail-header h3,
+.collection-detail-copy h4 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.collection-description {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.65;
+}
+
+.collection-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.collection-meta-grid p,
+.collection-link-row,
+.collection-notes p {
+  margin: 0;
+  color: var(--ink);
+}
+
+.collection-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(169, 31, 26, 0.08);
+  color: var(--wine);
+  font-weight: 800;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.collection-notes {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(169, 31, 26, 0.06);
+  border: 1px solid rgba(169, 31, 26, 0.14);
+}
+
+.collection-detail-empty {
+  align-items: center;
+}
+
+.admin-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-form-grid .admin-field,
+.admin-form-grid .admin-preview-card,
+.admin-form-grid button {
+  grid-column: span 2;
+}
+
+.admin-form-grid .admin-field:nth-child(1),
+.admin-form-grid .admin-field:nth-child(2),
+.admin-form-grid .admin-field:nth-child(3),
+.admin-form-grid .admin-field:nth-child(4),
+.admin-form-grid .admin-field:nth-child(5),
+.admin-form-grid .admin-field:nth-child(6),
+.admin-form-grid .admin-field:nth-child(7),
+.admin-form-grid .admin-field:nth-child(8),
+.admin-form-grid .admin-field:nth-child(9),
+.admin-form-grid .admin-field:nth-child(10),
+.admin-form-grid .admin-field:nth-child(11),
+.admin-form-grid .admin-field:nth-child(12) {
+  grid-column: span 1;
+}
+
+.admin-list-item-stack {
+  align-items: flex-start;
+}
+
+.admin-list-item-main {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-list-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-preview-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fffdf8;
+  border: 1px solid rgba(169, 31, 26, 0.14);
+}
+
+.admin-preview-card h3 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.admin-preview-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--ink);
+}
+
 .collection-item img {
   height: 150px;
 }
@@ -959,6 +1133,32 @@ a {
   .chat-form-actions .btn-primary {
     width: 100%;
   }
+
+  .collection-detail-card,
+  .collection-item {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-meta-grid,
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-grid .admin-field,
+  .admin-form-grid .admin-preview-card,
+  .admin-form-grid button {
+    grid-column: span 1;
+  }
+
+  .admin-list-item,
+  .admin-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-list-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1082,6 +1282,22 @@ a {
   margin-bottom: 18px;
 }
 
+.admin-field {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-field label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.admin-field-help {
+  font-size: 0.86rem;
+  color: rgba(75, 36, 27, 0.82);
+}
+
 .admin-form input,
 .admin-form textarea,
 .admin-form select {
@@ -1183,10 +1399,11 @@ a {
 .detail-card {
   box-shadow: var(--panel-shadow);
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
   gap: 16px;
   padding: 16px;
   overflow: visible;
+  align-items: stretch;
 }
 
 .detail-media {
@@ -1194,9 +1411,19 @@ a {
   flex-direction: column;
   gap: 14px;
   position: relative;
+  min-width: 0;
 }
 
 .detail-poster img {
+  width: 100%;
+  display: block;
+  margin-top: 28px;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+  max-height: 700px;
+  background: #fff8ee;
+  object-position: center;
+  padding: 10px;
   border-radius: 18px;
 }
 
@@ -1216,16 +1443,25 @@ a {
   border-radius: 16px;
   box-shadow: none;
   padding: 34px 36px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .detail-info-main h1 {
   color: #fff;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .detail-info-main p,
 .detail-info-meta p {
   color: #fff;
+}
+
+.detail-info-main p,
+.detail-info-meta p,
+.next-meet-content p,
+.next-meet-meta p {
+  margin-bottom: 0.75rem;
 }
 
 .detail-info-main,

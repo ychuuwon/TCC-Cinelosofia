@@ -5,6 +5,11 @@ import { isAdmin } from '../auth';
 export default function Navbar({ token, onLogout }) {
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
+  };
+
   const handleContactClick = (event) => {
     event.preventDefault();
 
@@ -43,7 +48,7 @@ export default function Navbar({ token, onLogout }) {
 
         <div className="navbar-auth">
           {token ? (
-            <button onClick={onLogout} className="btn-logout btn-primary">
+            <button onClick={handleLogout} className="btn-logout btn-primary">
               SAIR
             </button>
           ) : (

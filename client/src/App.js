@@ -14,7 +14,7 @@ import FilmesEncontros from './pages/FilmesEncontros';
 import Curtametragens from './pages/Curtametragens';
 import Chat from './pages/Chat';
 import AdminPresencas from './pages/AdminPresencas';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/AdminDashboardRefined';
 import { markLogin, markLogout } from './auth';
 
 export default function App() {
@@ -79,7 +79,7 @@ export default function App() {
             )}
           />
           <Route
-            path="/acervos/filmes"
+            path="/acervos/encontros"
             element={(
               <>
                 <Navbar token={token} user={user} onLogout={handleLogout} />
@@ -87,6 +87,10 @@ export default function App() {
                 <Footer />
               </>
             )}
+          />
+          <Route
+            path="/acervos/filmes"
+            element={<Navigate to="/acervos/encontros" replace />}
           />
           <Route
             path="/acervos/curtas"
