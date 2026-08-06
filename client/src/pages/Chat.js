@@ -166,6 +166,25 @@ export default function Chat() {
     setReportedIds(nextReports);
     localStorage.setItem('chat_denuncias', JSON.stringify(nextReports));
     setSucesso('Mensagem denunciada. A equipe será notificada.');
+    // enviar denúncia ao servidor
+    try {
+      const comentario = chat?.comentarios?.find((c) => c._id === comentarioId);
+      const payload = {
+        autor: getStoredUser()?.nome_usuario || getStoredUser()?.nome || 'Anônimo',
+        motivo: 'Chat',
+        mensagem: comentario?.texto || 'Denúncia de mensagem do chat',
+      };
+
+      fetch('http://localhost:7777/api/denuncias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(() => {
+        try { localStorage.setItem('nova_denuncia', JSON.stringify({ ts: Date.now() })); } catch (e) {}
+      }).catch(() => {});
+    } catch (e) {
+      // ignore
+    }
   };
 
   return (

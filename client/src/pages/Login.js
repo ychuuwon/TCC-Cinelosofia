@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { consumeAuthMessage } from '../auth';
+import ImageCarousel from '../components/ImageCarousel';
 
 export default function Login({ onLogin }) {
   const [identificador, setIdentificador] = useState('');
@@ -90,10 +91,9 @@ export default function Login({ onLogin }) {
           </div>
         </form>
       </section>
-      <aside
-        className="auth-visual login-visual"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/imagens/poderoso.jpg)` }}
-      />
+      <aside className="auth-visual login-visual">
+        <ImageCarousel slot="auth" />
+      </aside>
     </main>
   );
 }

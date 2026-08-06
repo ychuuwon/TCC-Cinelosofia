@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import ImageCarousel from '../components/ImageCarousel';
 
 export default function Register() {
   const [matricula, setMatricula] = useState('');
@@ -100,10 +101,9 @@ export default function Register() {
           </div>
         </form>
       </section>
-      <aside
-        className="auth-visual register-visual"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/imagens/cheerleader.jpg)` }}
-      />
+      <aside className="auth-visual register-visual">
+        <ImageCarousel slot="auth" />
+      </aside>
     </main>
   );
 }

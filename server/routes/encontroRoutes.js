@@ -30,6 +30,6 @@ router.put('/ativo', authMiddleware, adminMiddleware, upload.single('image'), sa
 router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), atualizarEncontro);
 router.delete('/:id', authMiddleware, adminMiddleware, deletarEncontro);
 router.post('/:id/presenca', authMiddleware, registrarPresenca);
-router.get('/:id/presencas', authMiddleware, listarPresencas);
+router.get('/:id/presencas', authMiddleware, adminMiddleware, listarPresencas);
 
 module.exports = router;

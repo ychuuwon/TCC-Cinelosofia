@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const API_BASE = 'http://localhost:7777/api';
 
@@ -6,16 +6,14 @@ const MENU_ITEMS = [
   { id: 'encontros', label: 'Próximos encontros', description: 'Edite o encontro que aparece na home' },
   { id: 'presencas', label: 'Presenças', description: 'Acompanhe os alunos que confirmaram presença' },
   { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas publicados no acervo' },
+  { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do carrossel (home / login / register)' },
   { id: 'registros', label: 'Registros de encontros', description: 'Publique registros a partir de encontros já cadastrados' },
   { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas' },
 ];
 
 const defaultState = {
   presencas: [],
-  denuncias: [
-    { id: 1, mensagem: 'Mensagem ofensiva direcionada a outro usuário.', autor: 'Usuário A', motivo: 'Ofensiva', status: 'Pendente' },
-    { id: 2, mensagem: 'Conteúdo inadequado para o ambiente do chat.', autor: 'Usuário B', motivo: 'Spam', status: 'Revisada' },
-  ],
+  denuncias: [],
 };
 
 const emptyEncontro = {
@@ -106,25 +104,36 @@ function normalizarEncontro(data) {
 }
 
 function normalizarCurta(data) {
+  if (!data) return {};
   return {
-    ...data,
-    id: data._id || data.id,
-    genero: data.genero,
+    _id: data._id || data.id,
+    titulo: data.titulo || '',
+    sinopse: data.sinopse || '',
+    direcao: data.direcao || '',
+    ano: data.ano || '',
+    duracao: data.duracao || '',
+    genero: typeof data.genero === 'string' ? data.genero : (data.genero?.descricao || ''),
+    class_etaria: data.class_etaria || '',
+    foto_capa: data.foto_capa || '',
+    tema: data.tema || '',
+    autores: data.autores || '',
+    elenco: data.elenco || '',
+    link_video: data.link_video || '',
   };
 }
 
 function normalizarRegistroEncontro(data) {
+  if (!data) return {};
   return {
-    ...data,
-    id: data._id || data.id,
+    _id: data._id || data.id,
+    encontro_original: data.encontro_original || null,
+    encontro_snapshot: data.encontro_snapshot || null,
+    questoes_discussao: data.questoes_discussao || '',
   };
 }
 
 function formatarData(valor) {
-  if (!valor) {
-    return '';
-  }
-
+  if (!valor) return '';
   return new Date(valor).toLocaleDateString('pt-BR');
 }
 
@@ -138,8 +147,8 @@ export default function AdminDashboard() {
   const [novoEncontro, setNovoEncontro] = useState(emptyEncontro);
   const [imagemEncontroFile, setImagemEncontroFile] = useState(null);
   const [uploadingImagemEncontro, setUploadingImagemEncontro] = useState(false);
+  const [isCreatingEncontro, setIsCreatingEncontro] = useState(false);
 
-  const [generos, setGeneros] = useState([]);
   const [curtas, setCurtas] = useState([]);
   const [novoCurta, setNovoCurta] = useState(emptyCurta);
   const [imagemCurtaFile, setImagemCurtaFile] = useState(null);
@@ -149,18 +158,22 @@ export default function AdminDashboard() {
   const [uploadingImagemCurta, setUploadingImagemCurta] = useState(false);
 
   const [encontrosDisponiveis, setEncontrosDisponiveis] = useState([]);
+  const [presencasLista, setPresencasLista] = useState([]);
+  const [loadingPresencas, setLoadingPresencas] = useState(false);
+  const [mensagemPresencas, setMensagemPresencas] = useState('');
   const [registrosEncontros, setRegistrosEncontros] = useState([]);
   const [novoRegistroEncontro, setNovoRegistroEncontro] = useState(emptyRegistroEncontro);
   const [loadingRegistros, setLoadingRegistros] = useState(true);
   const [salvandoRegistroEncontro, setSalvandoRegistroEncontro] = useState(false);
   const [mensagemRegistro, setMensagemRegistro] = useState('');
+  const [registroEditandoId, setRegistroEditandoId] = useState(null);
 
   useEffect(() => {
     saveState(state);
   }, [state]);
 
   useEffect(() => {
-    const carregarEncontroAtual = async () => {
+    const carregarEncontroInicial = async () => {
       try {
         const response = await fetch(`${API_BASE}/encontros/ativo`);
         if (!response.ok) {
@@ -172,21 +185,22 @@ export default function AdminDashboard() {
 
         setCurrentEncontroId(encontro.id);
         setNovoEncontro(encontro.values);
+        setIsCreatingEncontro(false);
       } catch (error) {
         setCurrentEncontroId(null);
         setNovoEncontro(emptyEncontro);
+        setIsCreatingEncontro(false);
       } finally {
         setLoadingEncontro(false);
       }
     };
 
-    carregarEncontroAtual();
+    carregarEncontroInicial();
   }, []);
 
   useEffect(() => {
     const carregarCatalogos = async () => {
       await Promise.all([
-        carregarGeneros(),
         carregarCurtas(),
         carregarEncontrosDisponiveis(),
         carregarRegistrosEncontros(),
@@ -196,29 +210,79 @@ export default function AdminDashboard() {
     carregarCatalogos();
   }, []);
 
-  const totalResumo = useMemo(() => ({
-    encontros: currentEncontroId ? 1 : 0,
-    presencas: state.presencas.filter((item) => item.presente).length,
-    curtas: curtas.length,
-    registros: registrosEncontros.length,
-    denuncias: state.denuncias.filter((item) => item.status === 'Pendente').length,
-  }), [currentEncontroId, state, curtas, registrosEncontros]);
+  useEffect(() => {
+    if (activeSection === 'denuncias') {
+      carregarDenuncias();
+    }
+  }, [activeSection]);
+
+  useEffect(() => {
+    const carregarPresencasAtivas = async () => {
+      if (activeSection !== 'presencas') return;
+      setLoadingPresencas(true);
+      setMensagemPresencas('');
+
+      try {
+        let encontroId = currentEncontroId;
+
+        if (!encontroId) {
+          const resp = await fetch(`${API_BASE}/encontros/ativo`);
+          if (!resp.ok) throw new Error('Não foi possível carregar o encontro ativo.');
+          const data = await resp.json();
+          encontroId = data._id || data.id;
+        }
+
+        if (!encontroId) {
+          setPresencasLista([]);
+          setMensagemPresencas('Nenhum encontro ativo.');
+          return;
+        }
+
+        const presResp = await fetch(`${API_BASE}/encontros/${encontroId}/presencas`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+
+        if (!presResp.ok) {
+          const err = await presResp.json().catch(() => ({}));
+          throw new Error(err.erro || 'Erro ao carregar presenças.');
+        }
+
+        const presData = await presResp.json();
+        setPresencasLista(Array.isArray(presData) ? presData : []);
+      } catch (error) {
+        setPresencasLista([]);
+        setMensagemPresencas(error.message || 'Erro ao carregar presenças.');
+      } finally {
+        setLoadingPresencas(false);
+      }
+    };
+
+    carregarPresencasAtivas();
+
+    const onStorage = (ev) => {
+      if (ev.key === 'presenca_atualizada') {
+        if (activeSection === 'presencas') {
+          carregarPresencasAtivas();
+        }
+      }
+      if (ev.key === 'nova_denuncia') {
+        if (activeSection === 'denuncias') {
+          carregarDenuncias();
+        }
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [activeSection, currentEncontroId]);
+
+  
 
   const encontroSelecionado = encontrosDisponiveis.find((item) => item._id === novoRegistroEncontro.encontroId) || null;
 
   const sincronizarEncontroPublico = () => {
     window.dispatchEvent(new Event('encontro-atualizado'));
   };
-
-  async function carregarGeneros() {
-    try {
-      const response = await fetch(`${API_BASE}/generos`);
-      const data = await response.json();
-      setGeneros(Array.isArray(data) ? data : []);
-    } catch (error) {
-      setGeneros([]);
-    }
-  }
 
   async function carregarCurtas() {
     setLoadingCurtas(true);
@@ -300,14 +364,23 @@ export default function AdminDashboard() {
 
       setCurrentEncontroId(encontro.id);
       setNovoEncontro(encontro.values);
+      setIsCreatingEncontro(false);
       setMensagemAdmin('Encontro atual carregado para edição.');
     } catch (error) {
       setCurrentEncontroId(null);
       setNovoEncontro(emptyEncontro);
+      setIsCreatingEncontro(false);
       setMensagemAdmin(error.message || 'Erro ao carregar encontro.');
     } finally {
       setLoadingEncontro(false);
     }
+  };
+
+  const prepararNovoEncontro = () => {
+    setIsCreatingEncontro(true);
+    setMensagemAdmin('Preencha os campos para criar um novo encontro ativo.');
+    setNovoEncontro(emptyEncontro);
+    setCurrentEncontroId(null);
   };
 
   const handleSalvarEncontro = async (event) => {
@@ -352,8 +425,11 @@ export default function AdminDashboard() {
         trailer: novoEncontro.trailer,
       };
 
-      const response = await fetch(`${API_BASE}/encontros/ativo`, {
-        method: 'PUT',
+      const endpoint = isCreatingEncontro ? `${API_BASE}/encontros` : `${API_BASE}/encontros/ativo`;
+      const method = isCreatingEncontro ? 'POST' : 'PUT';
+
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -372,8 +448,12 @@ export default function AdminDashboard() {
 
       setCurrentEncontroId(encontroNormalizado.id || currentEncontroId);
       setNovoEncontro(encontroNormalizado.values);
+      setIsCreatingEncontro(false);
       setMensagemAdmin('Encontro salvo com sucesso. A home e PARTICIPE foram atualizadas.');
+      await carregarEncontrosDisponiveis();
       sincronizarEncontroPublico();
+      setCurrentEncontroId(encontroNormalizado.id || currentEncontroId);
+      setNovoEncontro(encontroNormalizado.values);
       setImagemEncontroFile(null);
     } catch (error) {
       setMensagemAdmin(error.message || 'Erro ao salvar encontro.');
@@ -416,37 +496,32 @@ export default function AdminDashboard() {
     setUploadingImagemCurta(Boolean(imagemCurtaFile));
 
     try {
-      let fotoCapaFinal = novoCurta.foto_capa;
-
-      if (imagemCurtaFile) {
-        fotoCapaFinal = await uploadImagemCloudinary(imagemCurtaFile);
-      }
-
       const anoNormalizado = Number(novoCurta.ano);
 
-      const payload = {
-        tipo: 'curta',
-        titulo: novoCurta.titulo,
-        sinopse: novoCurta.sinopse,
-        direcao: novoCurta.direcao,
-        ano: Number.isNaN(anoNormalizado) ? undefined : anoNormalizado,
-        duracao: novoCurta.duracao,
-        genero: novoCurta.genero,
-        class_etaria: novoCurta.class_etaria,
-        foto_capa: fotoCapaFinal,
-        tema: novoCurta.tema,
-        autores: novoCurta.autores,
-        elenco: novoCurta.elenco,
-        link_video: novoCurta.link_video,
-      };
+      const formData = new FormData();
+      formData.append('tipo', 'curta');
+      formData.append('titulo', novoCurta.titulo);
+      formData.append('sinopse', novoCurta.sinopse);
+      formData.append('direcao', novoCurta.direcao);
+      formData.append('ano', Number.isNaN(anoNormalizado) ? '' : anoNormalizado);
+      formData.append('duracao', novoCurta.duracao);
+      formData.append('genero', novoCurta.genero);
+      formData.append('class_etaria', novoCurta.class_etaria);
+      formData.append('tema', novoCurta.tema);
+      formData.append('autores', novoCurta.autores);
+      formData.append('elenco', novoCurta.elenco);
+      formData.append('link_video', novoCurta.link_video);
+
+      if (imagemCurtaFile) {
+        formData.append('image', imagemCurtaFile);
+      }
 
       const response = await fetch(`${API_BASE}/acervos`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       const responseData = await response.json().catch(() => ({}));
@@ -498,6 +573,70 @@ export default function AdminDashboard() {
     }
   };
 
+  // Carousel management: separate Home and Auth (Login/Cadastro) collections
+  const [carouselHomeFile, setCarouselHomeFile] = useState(null);
+  const [carouselAuthFile, setCarouselAuthFile] = useState(null);
+  const [carouselItemsHome, setCarouselItemsHome] = useState([]);
+  const [carouselItemsAuth, setCarouselItemsAuth] = useState([]);
+  const [loadingCarouselHome, setLoadingCarouselHome] = useState(false);
+  const [loadingCarouselAuth, setLoadingCarouselAuth] = useState(false);
+
+  const carregarCarouselSlot = async (slot) => {
+    try {
+      const url = `${API_BASE}/carousel?slot=${slot}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (slot === 'home') setCarouselItemsHome([]);
+        else setCarouselItemsAuth([]);
+        return;
+      }
+      const data = await res.json();
+      if (slot === 'home') setCarouselItemsHome(data);
+      else setCarouselItemsAuth(data);
+    } catch (err) {
+      if (slot === 'home') setCarouselItemsHome([]);
+      else setCarouselItemsAuth([]);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'carousel') {
+      carregarCarouselSlot('home');
+      carregarCarouselSlot('auth');
+    }
+  }, [activeSection]);
+
+  const handleSalvarCarouselSlot = async (slot, file) => {
+    if (!file) { alert('Escolha um arquivo'); return; }
+    const setLoading = slot === 'home' ? setLoadingCarouselHome : setLoadingCarouselAuth;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) { alert('Faça login como administrador'); return; }
+      const form = new FormData();
+      form.append('slot', slot === 'home' ? 'home' : 'auth');
+      form.append('image', file);
+      const res = await fetch(`${API_BASE}/carousel`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erro || 'Erro ao enviar imagem');
+      if (slot === 'home') setCarouselHomeFile(null); else setCarouselAuthFile(null);
+      await carregarCarouselSlot(slot);
+      alert('Imagem adicionada');
+    } catch (err) {
+      alert(err.message || 'Erro');
+    } finally { setLoading(false); }
+  };
+
+  const handleDeleteCarousel = async (id, slot) => {
+    if (!window.confirm('Remover imagem do carrossel?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/carousel/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Erro ao remover');
+      await carregarCarouselSlot(slot);
+    } catch (err) { alert(err.message || 'Erro'); }
+  };
+
   const handleSalvarRegistroEncontro = async (event) => {
     event.preventDefault();
     setMensagemRegistro('');
@@ -509,15 +648,18 @@ export default function AdminDashboard() {
 
     const token = localStorage.getItem('token');
     if (!token) {
-      setMensagemRegistro('Faça login como administrador para publicar o registro.');
+      setMensagemRegistro('Faça login como administrador para publicar ou editar o registro.');
       return;
     }
 
     setSalvandoRegistroEncontro(true);
 
     try {
-      const response = await fetch(`${API_BASE}/registros-encontros`, {
-        method: 'POST',
+      const endpoint = registroEditandoId ? `${API_BASE}/registros-encontros/${registroEditandoId}` : `${API_BASE}/registros-encontros`;
+      const method = registroEditandoId ? 'PUT' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -531,8 +673,9 @@ export default function AdminDashboard() {
         throw new Error(responseData.erro || responseData.mensagem || 'Não foi possível publicar o registro do encontro.');
       }
 
-      setMensagemRegistro('Registro de encontro publicado com sucesso.');
+      setMensagemRegistro(registroEditandoId ? 'Registro de encontro atualizado com sucesso.' : 'Registro de encontro publicado com sucesso.');
       setNovoRegistroEncontro(emptyRegistroEncontro);
+      setRegistroEditandoId(null);
       await carregarRegistrosEncontros();
       await carregarEncontrosDisponiveis();
     } catch (error) {
@@ -540,6 +683,21 @@ export default function AdminDashboard() {
     } finally {
       setSalvandoRegistroEncontro(false);
     }
+  };
+
+  const handleEditarRegistroEncontro = (registro) => {
+    setRegistroEditandoId(registro._id);
+    setNovoRegistroEncontro({
+      encontroId: registro.encontro_original?._id || registro.encontro_snapshot?._id || '',
+      questoes_discussao: registro.questoes_discussao || '',
+    });
+    setMensagemRegistro('Editando registro de encontro. Faça suas alterações e salve.');
+  };
+
+  const handleCancelarEdicaoRegistro = () => {
+    setRegistroEditandoId(null);
+    setNovoRegistroEncontro(emptyRegistroEncontro);
+    setMensagemRegistro('Edição cancelada.');
   };
 
   const handleRemoverRegistroEncontro = async (registroId) => {
@@ -573,18 +731,66 @@ export default function AdminDashboard() {
     }
   };
 
-  const togglePresenca = (id) => {
-    setState((prev) => ({
-      ...prev,
-      presencas: prev.presencas.map((item) => item.id === id ? { ...item, presente: !item.presente } : item),
-    }));
-  };
+  
 
   const atualizarDenuncia = (id, novoStatus) => {
     setState((prev) => ({
       ...prev,
       denuncias: prev.denuncias.map((item) => item.id === id ? { ...item, status: novoStatus } : item),
     }));
+  };
+
+  const [loadingDenuncias, setLoadingDenuncias] = useState(false);
+  const [mensagemDenuncias, setMensagemDenuncias] = useState('');
+
+  const carregarDenuncias = async () => {
+    setLoadingDenuncias(true);
+    setMensagemDenuncias('');
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMensagemDenuncias('Faça login como administrador para ver denúncias.');
+        setState((prev) => ({ ...prev, denuncias: [] }));
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/denuncias`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.erro || 'Erro ao carregar denúncias.');
+      }
+
+      const data = await res.json();
+      // normalize to expected shape in state (id, autor, motivo, mensagem, status)
+      const normalized = Array.isArray(data) ? data.map((d) => ({ id: d._id || d.id, autor: d.autor || '', motivo: d.motivo || '', mensagem: d.mensagem || '', status: d.status || 'Pendente' })) : [];
+      setState((prev) => ({ ...prev, denuncias: normalized }));
+    } catch (error) {
+      setState((prev) => ({ ...prev, denuncias: [] }));
+      setMensagemDenuncias(error.message || 'Erro ao carregar denúncias.');
+    } finally {
+      setLoadingDenuncias(false);
+    }
+  };
+
+  const handleRemoverDenuncia = async (id) => {
+    if (!window.confirm('Remover esta denúncia?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Faça login como administrador');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/denuncias/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.erro || 'Erro ao remover denúncia.');
+      }
+
+      await carregarDenuncias();
+    } catch (error) {
+      alert(error.message || 'Erro ao remover denúncia.');
+    }
   };
 
   const renderTextoGenero = (genero) => {
@@ -602,6 +808,7 @@ export default function AdminDashboard() {
           <p className="eyebrow">Painel administrativo</p>
           <h1>Administre o portal Cinelosofia</h1>
           <p>Gerencie encontros, presenças, curtas, registros de encontros e denúncias do chat a partir de um único painel.</p>
+          
         </div>
       </section>
 
@@ -621,39 +828,24 @@ export default function AdminDashboard() {
         </aside>
 
         <div className="admin-content">
-          <div className="admin-summary-grid">
-            <article className="admin-summary-card">
-              <h3>{totalResumo.encontros}</h3>
-              <p>Encontros cadastrados</p>
-            </article>
-            <article className="admin-summary-card">
-              <h3>{totalResumo.presencas}</h3>
-              <p>Presenças confirmadas</p>
-            </article>
-            <article className="admin-summary-card">
-              <h3>{totalResumo.curtas}</h3>
-              <p>Curtas publicadas</p>
-            </article>
-            <article className="admin-summary-card">
-              <h3>{totalResumo.registros}</h3>
-              <p>Registros de encontros</p>
-            </article>
-            <article className="admin-summary-card">
-              <h3>{totalResumo.denuncias}</h3>
-              <p>Denúncias pendentes</p>
-            </article>
-          </div>
+          
 
           {activeSection === 'encontros' && (
             <div className="admin-section-card">
               <div className="admin-section-header">
                 <div>
-                  <h2>Encontro ativo</h2>
+                  <h2>{isCreatingEncontro ? 'Novo encontro ativo' : 'Encontro ativo'}</h2>
                   <p className="auth-description">Tudo que for salvo aqui substitui o que aparece na home e na página PARTICIPE.</p>
                 </div>
-                <button type="button" className="btn-pill outline" onClick={carregarEncontroAtual} disabled={loadingEncontro || salvandoEncontro}>
-                  Editar encontro
-                </button>
+                <div className="admin-action-buttons">
+                  <button type="button" className="btn-pill outline" onClick={prepararNovoEncontro} disabled={loadingEncontro || salvandoEncontro}>
+                    Criar novo encontro
+                  </button>
+                  <button type="button" className="btn-pill outline" onClick={carregarEncontroAtual} disabled={loadingEncontro || salvandoEncontro}>
+                    Editar encontro
+                  </button>
+                  {/* Presenças acessíveis via menu 'Presenças' — removido link duplicado */}
+                </div>
               </div>
 
               {loadingEncontro ? <p className="chat-status">Carregando encontro atual...</p> : null}
@@ -787,7 +979,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <button type="submit" className="btn-primary" disabled={salvandoEncontro || uploadingImagemEncontro}>
-                  {salvandoEncontro || uploadingImagemEncontro ? 'Salvando...' : 'Salvar encontro'}
+                  {salvandoEncontro || uploadingImagemEncontro ? 'Salvando...' : isCreatingEncontro ? 'Criar encontro' : 'Salvar encontro'}
                 </button>
               </form>
             </div>
@@ -802,19 +994,20 @@ export default function AdminDashboard() {
               </div>
 
               <div className="admin-list">
-                {state.presencas.length === 0 ? (
+                {loadingPresencas ? (
+                  <p className="chat-status">Carregando presenças...</p>
+                ) : mensagemPresencas ? (
+                  <p className="chat-status">{mensagemPresencas}</p>
+                ) : presencasLista.length === 0 ? (
                   <p className="chat-status">Nenhuma presença cadastrada ainda.</p>
                 ) : (
-                  state.presencas.map((item) => (
-                    <article key={item.id} className="admin-list-item">
+                  presencasLista.map((presenca, index) => (
+                    <article key={presenca._id || index} className="admin-list-item">
                       <div>
-                        <strong>{item.nome}</strong>
-                        <p>{item.turma} • {item.encontro}</p>
+                        <p><strong>Nome completo:</strong> {presenca.nome}</p>
+                        <p><strong>Turma:</strong> {presenca.turma}</p>
+                        <p><strong>Data do registro:</strong> {presenca.data_registro ? new Date(presenca.data_registro).toLocaleString('pt-BR') : '-'}</p>
                       </div>
-                      <label className="presence-toggle">
-                        <input type="checkbox" checked={item.presente} onChange={() => togglePresenca(item.id)} />
-                        <span>{item.presente ? 'Presente' : 'Ausente'}</span>
-                      </label>
                     </article>
                   ))
                 )}
@@ -828,6 +1021,156 @@ export default function AdminDashboard() {
                 <div>
                   <h2>Curta-metragens</h2>
                   <p className="auth-description">Cada curta cadastrado aparece automaticamente no acervo público com todos os seus campos.</p>
+
+            {activeSection === 'carousel' && (
+              <div className="admin-section-card">
+                <div className="admin-section-header">
+                  <div>
+                    <h2>Carrossel de imagens</h2>
+                    <p className="auth-description">Envie imagens que aparecem na home e nas telas de login/cadastro.</p>
+                  </div>
+                </div>
+
+                <div className="admin-form admin-form-grid">
+                  <div className="admin-field">
+                    <label>Adicionar imagem para a Home</label>
+                    <span className="admin-field-help">Aparece ao lado do título na página inicial.</span>
+                    <input type="file" accept="image/*" onChange={(e) => setCarouselHomeFile(e.target.files?.[0] || null)} />
+                    <div style={{ marginTop: 8 }}>
+                      <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
+                    </div>
+                  </div>
+
+                  <div className="admin-field">
+                    <label>Adicionar imagem para Login / Cadastro</label>
+                    <span className="admin-field-help">Visual usado nas páginas de autenticação.</span>
+                    <input type="file" accept="image/*" onChange={(e) => setCarouselAuthFile(e.target.files?.[0] || null)} />
+                    <div style={{ marginTop: 8 }}>
+                      <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 18 }}>
+                  <h3>Imagens: Home</h3>
+                  <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('home')}>Recarregar</button>
+                  <div className="admin-list" style={{ marginTop: 12 }}>
+                    {carouselItemsHome.length === 0 ? (
+                      <p className="chat-status">Nenhuma imagem cadastrada para Home.</p>
+                    ) : (
+                      carouselItemsHome.map((item) => (
+                        <article key={item._id} className="admin-list-item">
+                          <div>
+                            <strong>{item.slot}</strong>
+                            <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                            <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'home')}>Remover</button>
+                          </div>
+                        </article>
+                      ))
+                    )}
+                  </div>
+
+                  <h3 style={{ marginTop: 18 }}>Imagens: Login / Cadastro</h3>
+                  <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('auth')}>Recarregar</button>
+                  <div className="admin-list" style={{ marginTop: 12 }}>
+                    {carouselItemsAuth.length === 0 ? (
+                      <p className="chat-status">Nenhuma imagem cadastrada para Login/Cadastro.</p>
+                    ) : (
+                      carouselItemsAuth.map((item) => (
+                        <article key={item._id} className="admin-list-item">
+                          <div>
+                            <strong>{item.slot}</strong>
+                            <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                            <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'auth')}>Remover</button>
+                          </div>
+                        </article>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+          {activeSection === 'carousel' && (
+            <div className="admin-section-card">
+              <div className="admin-section-header">
+                <div>
+                  <h2>Carrossel de imagens</h2>
+                  <p className="auth-description">Envie imagens que aparecem na home e nas telas de login/cadastro.</p>
+                </div>
+              </div>
+
+              <div className="admin-form admin-form-grid">
+                <div className="admin-field">
+                  <label>Adicionar imagem para a Home</label>
+                  <span className="admin-field-help">Aparece ao lado do título na página inicial.</span>
+                  <input type="file" accept="image/*" onChange={(e) => setCarouselHomeFile(e.target.files?.[0] || null)} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
+                  </div>
+                </div>
+
+                <div className="admin-field">
+                  <label>Adicionar imagem para Login / Cadastro</label>
+                  <span className="admin-field-help">Visual usado nas páginas de autenticação.</span>
+                  <input type="file" accept="image/*" onChange={(e) => setCarouselAuthFile(e.target.files?.[0] || null)} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 18 }}>
+                <h3>Imagens: Home</h3>
+                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('home')}>Recarregar</button>
+                <div className="admin-list" style={{ marginTop: 12 }}>
+                  {carouselItemsHome.length === 0 ? (
+                    <p className="chat-status">Nenhuma imagem cadastrada para Home.</p>
+                  ) : (
+                    carouselItemsHome.map((item) => (
+                      <article key={item._id} className="admin-list-item">
+                        <div>
+                          <strong>{item.slot}</strong>
+                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'home')}>Remover</button>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+
+                <h3 style={{ marginTop: 18 }}>Imagens: Login / Cadastro</h3>
+                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('auth')}>Recarregar</button>
+                <div className="admin-list" style={{ marginTop: 12 }}>
+                  {carouselItemsAuth.length === 0 ? (
+                    <p className="chat-status">Nenhuma imagem cadastrada para Login/Cadastro.</p>
+                  ) : (
+                    carouselItemsAuth.map((item) => (
+                      <article key={item._id} className="admin-list-item">
+                        <div>
+                          <strong>{item.slot}</strong>
+                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'auth')}>Remover</button>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
                 </div>
               </div>
 
@@ -856,14 +1199,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="admin-field">
                   <label htmlFor="curta-genero">Gênero</label>
-                  <select id="curta-genero" value={novoCurta.genero} onChange={(event) => setNovoCurta((prev) => ({ ...prev, genero: event.target.value }))} required>
-                    <option value="">Selecione um gênero</option>
-                    {generos.map((genero) => (
-                      <option key={genero._id} value={genero._id}>
-                        {genero.descricao}
-                      </option>
-                    ))}
-                  </select>
+                  <input id="curta-genero" type="text" value={novoCurta.genero} onChange={(event) => setNovoCurta((prev) => ({ ...prev, genero: event.target.value }))} required />
                 </div>
                 <div className="admin-field">
                   <label htmlFor="curta-classificacao">Classificação indicativa</label>
@@ -978,9 +1314,16 @@ export default function AdminDashboard() {
                   </article>
                 )}
 
-                <button type="submit" className="btn-primary" disabled={salvandoRegistroEncontro}>
-                  {salvandoRegistroEncontro ? 'Publicando...' : 'Publicar registro'}
-                </button>
+                <div className="admin-form-actions">
+                  <button type="submit" className="btn-primary" disabled={salvandoRegistroEncontro}>
+                    {salvandoRegistroEncontro ? 'Salvando...' : registroEditandoId ? 'Salvar alterações' : 'Publicar registro'}
+                  </button>
+                  {registroEditandoId && (
+                    <button type="button" className="btn-pill outline" onClick={handleCancelarEdicaoRegistro} disabled={salvandoRegistroEncontro}>
+                      Cancelar edição
+                    </button>
+                  )}
+                </div>
               </form>
 
               {loadingRegistros ? (
@@ -1004,7 +1347,8 @@ export default function AdminDashboard() {
                             {registro.questoes_discussao && <span>Questões: {registro.questoes_discussao}</span>}
                           </div>
                           <div className="admin-list-actions">
-                            <button type="button" className="btn-pill outline" onClick={() => handleRemoverRegistroEncontro(registro._id)}>Remover</button>
+                            <button type="button" className="btn-pill outline" onClick={() => handleEditarRegistroEncontro(registro)}>Editar</button>
+                          <button type="button" className="btn-pill outline" onClick={() => handleRemoverRegistroEncontro(registro._id)}>Remover</button>
                           </div>
                         </article>
                       );
@@ -1024,21 +1368,30 @@ export default function AdminDashboard() {
               </div>
 
               <div className="admin-list">
-                {state.denuncias.map((item) => (
-                  <article key={item.id} className="admin-list-item">
-                    <div>
-                      <strong>{item.autor}</strong>
-                      <p>{item.motivo}</p>
-                      <span>{item.mensagem}</span>
-                    </div>
-                    <div className="admin-inline-actions">
-                      <span className={`admin-chip ${item.status === 'Pendente' ? 'warning' : 'success'}`}>{item.status}</span>
-                      <button type="button" className="btn-pill outline" onClick={() => atualizarDenuncia(item.id, item.status === 'Pendente' ? 'Revisada' : 'Pendente')}>
-                        {item.status === 'Pendente' ? 'Avaliar' : 'Reabrir'}
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                {loadingDenuncias ? (
+                  <p className="chat-status">Carregando denúncias...</p>
+                ) : mensagemDenuncias ? (
+                  <p className="chat-status">{mensagemDenuncias}</p>
+                ) : state.denuncias.length === 0 ? (
+                  <p className="chat-status">Nenhuma denúncia cadastrada.</p>
+                ) : (
+                  state.denuncias.map((item) => (
+                    <article key={item.id} className="admin-list-item">
+                      <div>
+                        <strong>{item.autor}</strong>
+                        <p>{item.motivo}</p>
+                        <span>{item.mensagem}</span>
+                      </div>
+                      <div className="admin-inline-actions">
+                        <span className={`admin-chip ${item.status === 'Pendente' ? 'warning' : 'success'}`}>{item.status}</span>
+                        <button type="button" className="btn-pill outline" onClick={() => atualizarDenuncia(item.id, item.status === 'Pendente' ? 'Revisada' : 'Pendente')}>
+                          {item.status === 'Pendente' ? 'Avaliar' : 'Reabrir'}
+                        </button>
+                        <button type="button" className="btn-pill" onClick={() => handleRemoverDenuncia(item.id)}>Remover</button>
+                      </div>
+                    </article>
+                  ))
+                )}
               </div>
             </div>
           )}

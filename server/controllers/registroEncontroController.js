@@ -59,6 +59,43 @@ const criarRegistro = async (req, res) => {
   }
 };
 
+const atualizarRegistro = async (req, res) => {
+  try {
+    const { encontroId, questoes_discussao } = req.body;
+
+    if (!questoes_discussao) {
+      return res.status(400).json({ erro: 'Questões de discussão são obrigatórias.' });
+    }
+
+    const registro = await RegistroEncontro.findById(req.params.id);
+
+    if (!registro) {
+      return res.status(404).json({ erro: 'Registro de encontro não encontrado.' });
+    }
+
+    if (encontroId) {
+      const encontro = await Encontro.findById(encontroId);
+      if (!encontro) {
+        return res.status(404).json({ erro: 'Encontro selecionado não encontrado.' });
+      }
+
+      registro.encontro_original = encontro._id;
+      registro.encontro_snapshot = mapearSnapshot(encontro);
+    }
+
+    registro.questoes_discussao = questoes_discussao;
+    await registro.save();
+
+    return res.status(200).json({
+      mensagem: 'Registro de encontro atualizado com sucesso!',
+      registro,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao atualizar registro de encontro.' });
+  }
+};
+
 const deletarRegistro = async (req, res) => {
   try {
     const registro = await RegistroEncontro.findByIdAndDelete(req.params.id);
@@ -77,5 +114,6 @@ const deletarRegistro = async (req, res) => {
 module.exports = {
   buscarTodos,
   criarRegistro,
+  atualizarRegistro,
   deletarRegistro,
 };

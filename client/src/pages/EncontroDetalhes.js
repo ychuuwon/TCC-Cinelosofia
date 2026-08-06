@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 
 export default function EncontroDetalhes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [nome, setNome] = useState('');
   const [turma, setTurma] = useState('');
+  const [nome, setNome] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [encontro, setEncontro] = useState(null);
   const { id } = useParams();
@@ -41,19 +41,43 @@ export default function EncontroDetalhes() {
     event.preventDefault();
     setMensagem('');
 
+    if (!token) {
+      setMensagem('Faça login para marcar presença.');
+      return;
+    }
+
     try {
-      if (!encontroId) {
+      let targetId = encontroId;
+
+      if (!targetId) {
+        // tentar obter encontro ativo do servidor
+        const ativoResp = await fetch('http://localhost:7777/api/encontros/ativo');
+        if (ativoResp.ok) {
+          const ativoData = await ativoResp.json();
+          if (ativoData && ativoData._id) {
+            targetId = ativoData._id;
+            setEncontro(ativoData);
+          }
+        }
+      }
+
+      if (!targetId) {
         setMensagem('Não foi possível identificar o encontro.');
         return;
       }
 
-      const response = await fetch(`http://localhost:7777/api/encontros/${encontroId}/presenca`, {
+      if (!nome || nome.trim() === '') {
+        setMensagem('Informe seu nome completo.');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:7777/api/encontros/${targetId}/presenca`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ nome, turma }),
+        body: JSON.stringify({ nome: nome.trim(), turma }),
       });
 
       const data = await response.json();
@@ -64,8 +88,13 @@ export default function EncontroDetalhes() {
       }
 
       setMensagem('Presença confirmada com sucesso!');
-      setNome('');
       setTurma('');
+      setNome('');
+      try {
+        localStorage.setItem('presenca_atualizada', JSON.stringify({ encontroId: targetId, ts: Date.now() }));
+      } catch (e) {
+        // ignore storage errors
+      }
     } catch (error) {
       setMensagem('Erro ao enviar presença.');
     }
@@ -98,23 +127,27 @@ export default function EncontroDetalhes() {
             {mostrarFormulario && (
               <section className="presence-form-panel">
                 <h2>PREENCHA OS DADOS ABAIXO PARA MARCAR SUA PRESENÇA:</h2>
-                <form onSubmit={handleSubmit} className="presence-form">
-                  <label htmlFor="nome">Nome:</label>
-                  <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+                {!token ? (
+                  <p className="auth-message">Faça login para marcar presença. <a href="/login">Entrar</a></p>
+                ) : (
+                  <form onSubmit={handleSubmit} className="presence-form">
+                    <label htmlFor="nome">Nome completo:</label>
+                    <input id="nome" type="text" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome completo" required />
 
-                  <label htmlFor="turma">Turma:</label>
-                  <select id="turma" value={turma} onChange={(e) => setTurma(e.target.value)} required>
-                    <option value="">Selecione sua turma</option>
-                    {turmasDisponiveis.map((opcao) => (
-                      <option key={opcao} value={opcao}>
-                        {opcao}
-                      </option>
-                    ))}
-                  </select>
+                    <label htmlFor="turma">Turma:</label>
+                    <select id="turma" value={turma} onChange={(e) => setTurma(e.target.value)} required>
+                      <option value="">Selecione sua turma</option>
+                      {turmasDisponiveis.map((opcao) => (
+                        <option key={opcao} value={opcao}>
+                          {opcao}
+                        </option>
+                      ))}
+                    </select>
 
-                  {mensagem && <p className="auth-message">{mensagem}</p>}
-                  <button type="submit" className="btn-primary btn-pill">ENVIAR</button>
-                </form>
+                    {mensagem && <p className="auth-message">{mensagem}</p>}
+                    <button type="submit" className="btn-primary btn-pill">ENVIAR</button>
+                  </form>
+                )}
               </section>
             )}
           </div>

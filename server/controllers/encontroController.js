@@ -1,4 +1,5 @@
 const Encontro = require('../models/encontro');
+const Usuario = require('../models/User');
 const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const buscarTodos = async (req, res) => {
@@ -72,7 +73,7 @@ const criarEncontro = async (req, res) => {
       fotoCapaUrl = result.secure_url;
     }
 
-    await Encontro.updateMany({}, { $set: { destaque: false } });
+    await Encontro.updateMany({ destaque: true }, { $set: { destaque: false, presencas: [] } });
 
     const novoEncontro = await Encontro.create({
       tema,
@@ -112,13 +113,34 @@ const atualizarEncontro = async (req, res) => {
       fotoCapaUrl = result.secure_url;
     }
 
+    const encontroAntes = await Encontro.findById(req.params.id);
+    if (!encontroAntes) {
+      return res.status(404).json({ erro: 'Encontro não encontrado.' });
+    }
+
     await Encontro.updateMany({ _id: { $ne: req.params.id } }, { $set: { destaque: false } });
 
-    const encontro = await Encontro.findByIdAndUpdate(
-      req.params.id,
-      { tema, sinopse, direcao, ano, genero, foto_capa: fotoCapaUrl, data, hora, local, duracao, obs, trailer, destaque: true },
-      { new: true }
-    );
+    const updateFields = {
+      tema,
+      sinopse,
+      direcao,
+      ano,
+      genero,
+      foto_capa: fotoCapaUrl,
+      data,
+      hora,
+      local,
+      duracao,
+      obs,
+      trailer,
+      destaque: true,
+    };
+
+    if (!encontroAntes.destaque) {
+      updateFields.presencas = [];
+    }
+
+    const encontro = await Encontro.findByIdAndUpdate(req.params.id, updateFields, { new: true });
 
     if (!encontro) {
       return res.status(404).json({ erro: 'Encontro não encontrado.' });
@@ -150,12 +172,12 @@ const salvarAtivo = async (req, res) => {
     }
 
     const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
-    await Encontro.updateMany({}, { $set: { destaque: false } });
+    await Encontro.updateMany({ destaque: true }, { $set: { destaque: false, presencas: [] } });
 
     if (encontroAtual) {
       const encontroAtualizado = await Encontro.findByIdAndUpdate(
         encontroAtual._id,
-        { tema, sinopse, direcao, ano, genero, foto_capa: fotoCapaUrl, data, hora, local, duracao, obs, trailer, destaque: true },
+        { tema, sinopse, direcao, ano, genero, foto_capa: fotoCapaUrl, data, hora, local, duracao, obs, trailer, destaque: true, presencas: [] },
         { new: true }
       );
 
@@ -209,11 +231,20 @@ const deletarEncontro = async (req, res) => {
 
 const registrarPresenca = async (req, res) => {
   try {
-    const { encontroId } = req.params;
-    const { nome, turma } = req.body;
+    const encontroId = req.params.id;
+    const { turma, nome } = req.body;
 
-    if (!nome || !turma) {
-      return res.status(400).json({ erro: 'Nome e turma são obrigatórios.' });
+    if (!turma) {
+      return res.status(400).json({ erro: 'Turma é obrigatória.' });
+    }
+
+    if (!req.userId) {
+      return res.status(401).json({ erro: 'Usuário não autenticado.' });
+    }
+
+    const usuario = await Usuario.findById(req.userId);
+    if (!usuario) {
+      return res.status(401).json({ erro: 'Usuário não encontrado.' });
     }
 
     const encontro = await Encontro.findById(encontroId);
@@ -221,9 +252,16 @@ const registrarPresenca = async (req, res) => {
       return res.status(404).json({ erro: 'Encontro não encontrado.' });
     }
 
+    const jaRegistrado = encontro.presencas.some((item) => item.usuario?.toString() === usuario._id.toString());
+    if (jaRegistrado) {
+      return res.status(400).json({ erro: 'Você já confirmou presença neste encontro.' });
+    }
+
+    const nomeSalvo = nome && String(nome).trim() !== '' ? String(nome).trim() : usuario.nome_usuario;
+
     encontro.presencas.push({
-      usuario: req.userId,
-      nome,
+      usuario: usuario._id,
+      nome: nomeSalvo,
       turma,
       status: true,
       data_registro: new Date(),

@@ -1,5 +1,17 @@
+const fs = require('fs');
+const path = require('path');
 const Acervo = require('../models/acervo');
 const { uploadToCloudinary } = require('../utils/cloudinary');
+
+const logPath = path.join(__dirname, '..', 'tmp_acervo_log.txt');
+
+const appendLog = (message) => {
+  try {
+    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${message}\n`);
+  } catch (err) {
+    console.error('Failed to write acervo log:', err);
+  }
+};
 
 const buscarTodos = async (req, res) => {
   try {
@@ -10,7 +22,7 @@ const buscarTodos = async (req, res) => {
       filtro.tipo = tipo;
     }
 
-    const acervos = await Acervo.find(filtro).populate('genero', 'descricao');
+    const acervos = await Acervo.find(filtro);
     return res.status(200).json(acervos);
   } catch (error) {
     console.error(error);
@@ -20,7 +32,7 @@ const buscarTodos = async (req, res) => {
 
 const buscarPorId = async (req, res) => {
   try {
-    const acervo = await Acervo.findById(req.params.id).populate('genero', 'descricao');
+    const acervo = await Acervo.findById(req.params.id);
 
     if (!acervo) {
       return res.status(404).json({ erro: 'Acervo não encontrado.' });
@@ -35,6 +47,8 @@ const buscarPorId = async (req, res) => {
 
 const criarAcervo = async (req, res) => {
   try {
+    console.log('criarAcervo req.body:', req.body);
+    console.log('criarAcervo req.file:', req.file);
     const { tipo, titulo, sinopse, direcao, ano, duracao, genero, class_etaria, foto_capa, tema, autores, elenco, link_video } = req.body;
 
     if (!tipo || !titulo || !sinopse || !direcao || !ano || !duracao || !genero) {
@@ -73,8 +87,12 @@ const criarAcervo = async (req, res) => {
       acervo: novoAcervo,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ erro: 'Erro ao criar acervo.' });
+    appendLog(`acervoController criarAcervo error: ${error.stack || error}`);
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ erro: messages.join(' ') || 'Erro de validação ao criar acervo.' });
+    }
+    return res.status(500).json({ erro: error.message || 'Erro ao criar acervo.' });
   }
 };
 
@@ -93,7 +111,7 @@ const atualizarAcervo = async (req, res) => {
       req.params.id,
       { tipo, titulo, sinopse, direcao, ano, duracao, genero, class_etaria, foto_capa: fotoCapaUrl, tema, autores, elenco, link_video },
       { new: true }
-    ).populate('genero', 'descricao');
+    );
 
     if (!acervo) {
       return res.status(404).json({ erro: 'Acervo não encontrado.' });
@@ -104,8 +122,12 @@ const atualizarAcervo = async (req, res) => {
       acervo,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ erro: 'Erro ao atualizar acervo.' });
+    console.error('acervoController atualizarAcervo error:', error.stack || error);
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ erro: messages.join(' ') || 'Erro de validação ao atualizar acervo.' });
+    }
+    return res.status(500).json({ erro: error.message || 'Erro ao atualizar acervo.' });
   }
 };
 

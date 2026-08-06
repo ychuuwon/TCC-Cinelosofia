@@ -28,13 +28,14 @@ const acervoSchema = new mongoose.Schema({
     required: true,
   },
   genero: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Genero',
+    type: String,
     required: true,
+    trim: true,
   },
   class_etaria: {
     type: String,
-    maxlength: 2,
+    maxlength: 20,
+    trim: true,
   },
   foto_capa: {
     type: String,

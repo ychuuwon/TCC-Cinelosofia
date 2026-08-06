@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ImageCarousel from '../components/ImageCarousel';
 
 export default function Home() {
   const [proximoEncontro, setProximoEncontro] = useState(null);
@@ -31,7 +32,8 @@ export default function Home() {
           <p className="eyebrow">Clube de Cinema e Filosofia do IFC - Campus Sombrio</p>
         </div>
         <div className="hero-image">
-          <img src="/imagens/encontro.png" alt="Clube Cinelosofia" />
+          {/* Carousel uses admin-managed images for the home slot */}
+          <ImageCarousel slot="home" />
         </div>
       </section>
 
