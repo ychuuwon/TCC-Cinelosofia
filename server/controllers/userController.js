@@ -37,6 +37,7 @@ const loginUser = async (req, res) => {
         id: usuario._id,
         matricula: usuario.matricula,
         nome_usuario: usuario.nome_usuario,
+        email: usuario.email,
         adm: usuario.adm,
       },
       token,
@@ -49,10 +50,10 @@ const loginUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { matricula, nome_usuario, senha } = req.body;
+    const { matricula, nome_usuario, email, senha } = req.body;
 
-    if (!matricula || !nome_usuario || !senha) {
-      return res.status(400).json({ erro: 'Matrícula, nome de usuário e senha são obrigatórios.' });
+    if (!matricula || !nome_usuario || !email || !senha) {
+      return res.status(400).json({ erro: 'Matrícula, nome de usuário, email e senha são obrigatórios.' });
     }
 
     if (!/^\d+$/.test(matricula)) {
@@ -61,6 +62,10 @@ const registerUser = async (req, res) => {
 
     if (matricula.length !== 10) {
       return res.status(400).json({ erro: 'A matrícula deve conter exatamente 10 algarismos.' });
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ erro: 'Digite um email válido.' });
     }
 
     const usuarioExisteMatricula = await User.findOne({ matricula });
@@ -73,6 +78,11 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ erro: 'Este nome de usuário já está em uso.' });
     }
 
+    const usuarioExisteEmail = await User.findOne({ email });
+    if (usuarioExisteEmail) {
+      return res.status(400).json({ erro: 'Este email já está em uso.' });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const senhaHash = await bcrypt.hash(senha, salt);
 
@@ -80,6 +90,7 @@ const registerUser = async (req, res) => {
       id: Date.now(),
       matricula,
       nome_usuario,
+      email,
       senha: senhaHash,
       adm: false,
     });
@@ -90,6 +101,7 @@ const registerUser = async (req, res) => {
         id: novoUsuario._id,
         matricula: novoUsuario.matricula,
         nome_usuario: novoUsuario.nome_usuario,
+        email: novoUsuario.email,
         adm: novoUsuario.adm,
       },
     });

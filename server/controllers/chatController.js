@@ -98,7 +98,7 @@ const deletarComentario = async (req, res) => {
       return res.status(404).json({ erro: 'Comentário não encontrado.' });
     }
 
-    if (comentario.usuario.toString() !== req.userId) {
+    if (comentario.usuario.toString() !== req.userId && req.userTipo !== 'adm') {
       return res.status(403).json({ erro: 'Você não pode deletar este comentário.' });
     }
 

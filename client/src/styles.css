@@ -1366,6 +1366,35 @@ a {
   border-radius: 12px;
 }
 
+.admin-report-card {
+  padding: 18px;
+  align-items: stretch;
+}
+
+.admin-report-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-report-card-main span:last-child {
+  line-height: 1.5;
+}
+
+.admin-report-card-main p,
+.admin-report-card-main span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.admin-report-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .admin-list-item strong {
   display: block;
   margin-bottom: 4px;
@@ -1408,6 +1437,20 @@ a {
   align-items: center;
 }
 
+.admin-report-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 150px));
+  gap: 10px;
+  justify-content: end;
+  min-width: 320px;
+  flex: 0 0 auto;
+}
+
+.admin-report-action {
+  width: 100%;
+  min-height: 46px;
+}
+
 .presence-toggle {
   display: inline-flex;
   align-items: center;
@@ -1434,6 +1477,12 @@ a {
   .admin-list-item {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-report-actions {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
   }
 }
 

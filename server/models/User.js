@@ -22,6 +22,14 @@ const usuarioSchema = new mongoose.Schema({
     trim: true,
     maxlength: 50,
   },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Digite um email válido.'],
+  },
   senha: {
     type: String,
     required: true,

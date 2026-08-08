@@ -5,6 +5,7 @@ import ImageCarousel from '../components/ImageCarousel';
 export default function Register() {
   const [matricula, setMatricula] = useState('');
   const [nomeUsuario, setNomeUsuario] = useState('');
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mensagem, setMensagem] = useState('');
   const navigate = useNavigate();
@@ -23,6 +24,11 @@ export default function Register() {
       return;
     }
 
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setMensagem('Digite um email válido.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:7777/api/users/register', {
         method: 'POST',
@@ -30,6 +36,7 @@ export default function Register() {
         body: JSON.stringify({
           matricula,
           nome_usuario: nomeUsuario,
+          email,
           senha,
         }),
       });
@@ -43,6 +50,7 @@ export default function Register() {
       setMensagem('Usuário registrado com sucesso!');
       setMatricula('');
       setNomeUsuario('');
+      setEmail('');
       setSenha('');
       navigate('/login');
     } catch (error) {
@@ -80,6 +88,16 @@ export default function Register() {
             placeholder="ex. luis1234"
             value={nomeUsuario}
             onChange={(e) => setNomeUsuario(e.target.value)}
+            required
+          />
+
+          <label htmlFor="email">Digite seu email</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="ex. nome@exemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
 

@@ -60,6 +60,7 @@ const ensureAdminUser = async () => {
 
     const matricula = process.env.ADMIN_MATRICULA || 'admin';
     const nomeUsuario = process.env.ADMIN_NOME_USUARIO || 'admin';
+    const email = process.env.ADMIN_EMAIL || 'admin@cinelosofia.local';
     const senha = process.env.ADMIN_SENHA || 'admin123';
 
     const usuarioExistente = await User.findOne({
@@ -80,6 +81,7 @@ const ensureAdminUser = async () => {
       id: Date.now(),
       matricula,
       nome_usuario: nomeUsuario,
+      email,
       senha: senhaHash,
       adm: true,
     });

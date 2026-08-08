@@ -733,11 +733,51 @@ export default function AdminDashboard() {
 
   
 
-  const atualizarDenuncia = (id, novoStatus) => {
-    setState((prev) => ({
-      ...prev,
-      denuncias: prev.denuncias.map((item) => item.id === id ? { ...item, status: novoStatus } : item),
-    }));
+  const atualizarAcaoMensagem = async (id, acao) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMensagemDenuncias('Faça login como administrador para alterar a mensagem.');
+      return;
+    }
+
+    if (acao === 'Removida' && !window.confirm('Deseja apagar esta mensagem?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/denuncias/${id}/mensagem`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ acao }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.erro || 'Erro ao atualizar a mensagem.');
+      }
+
+      const removerDenunciaResponse = await fetch(`${API_BASE}/denuncias/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!removerDenunciaResponse.ok) {
+        const err = await removerDenunciaResponse.json().catch(() => ({}));
+        throw new Error(err.erro || 'Erro ao remover a denúncia da lista.');
+      }
+
+      setState((prev) => ({
+        ...prev,
+        denuncias: prev.denuncias.filter((item) => item.id !== id),
+      }));
+    } catch (error) {
+      setMensagemDenuncias(error.message || 'Erro ao atualizar a mensagem.');
+    }
   };
 
   const [loadingDenuncias, setLoadingDenuncias] = useState(false);
@@ -762,34 +802,13 @@ export default function AdminDashboard() {
 
       const data = await res.json();
       // normalize to expected shape in state (id, autor, motivo, mensagem, status)
-      const normalized = Array.isArray(data) ? data.map((d) => ({ id: d._id || d.id, autor: d.autor || '', motivo: d.motivo || '', mensagem: d.mensagem || '', status: d.status || 'Pendente' })) : [];
+      const normalized = Array.isArray(data) ? data.map((d) => ({ id: d._id || d.id, autor: d.autor || '', motivo: d.motivo || '', mensagem: d.mensagem || '', status: d.status || 'Pendente', acaoMensagem: d.acaoMensagem || 'Pendente', chatId: d.chatId || null, comentarioId: d.comentarioId || null })) : [];
       setState((prev) => ({ ...prev, denuncias: normalized }));
     } catch (error) {
       setState((prev) => ({ ...prev, denuncias: [] }));
       setMensagemDenuncias(error.message || 'Erro ao carregar denúncias.');
     } finally {
       setLoadingDenuncias(false);
-    }
-  };
-
-  const handleRemoverDenuncia = async (id) => {
-    if (!window.confirm('Remover esta denúncia?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Faça login como administrador');
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/denuncias/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.erro || 'Erro ao remover denúncia.');
-      }
-
-      await carregarDenuncias();
-    } catch (error) {
-      alert(error.message || 'Erro ao remover denúncia.');
     }
   };
 
@@ -1004,9 +1023,9 @@ export default function AdminDashboard() {
                   presencasLista.map((presenca, index) => (
                     <article key={presenca._id || index} className="admin-list-item">
                       <div>
-                        <p><strong>Nome completo:</strong> {presenca.nome}</p>
-                        <p><strong>Turma:</strong> {presenca.turma}</p>
-                        <p><strong>Data do registro:</strong> {presenca.data_registro ? new Date(presenca.data_registro).toLocaleString('pt-BR') : '-'}</p>
+                        <strong>{presenca.nome || 'Aluno'}</strong>
+                        <p>{presenca.turma || '-'}{presenca.encontro ? ` • ${presenca.encontro}` : ''}</p>
+                        <span>{presenca.data_registro ? new Date(presenca.data_registro).toLocaleString('pt-BR') : 'Sem data de registro'}</span>
                       </div>
                     </article>
                   ))
@@ -1021,156 +1040,6 @@ export default function AdminDashboard() {
                 <div>
                   <h2>Curta-metragens</h2>
                   <p className="auth-description">Cada curta cadastrado aparece automaticamente no acervo público com todos os seus campos.</p>
-
-            {activeSection === 'carousel' && (
-              <div className="admin-section-card">
-                <div className="admin-section-header">
-                  <div>
-                    <h2>Carrossel de imagens</h2>
-                    <p className="auth-description">Envie imagens que aparecem na home e nas telas de login/cadastro.</p>
-                  </div>
-                </div>
-
-                <div className="admin-form admin-form-grid">
-                  <div className="admin-field">
-                    <label>Adicionar imagem para a Home</label>
-                    <span className="admin-field-help">Aparece ao lado do título na página inicial.</span>
-                    <input type="file" accept="image/*" onChange={(e) => setCarouselHomeFile(e.target.files?.[0] || null)} />
-                    <div style={{ marginTop: 8 }}>
-                      <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
-                    </div>
-                  </div>
-
-                  <div className="admin-field">
-                    <label>Adicionar imagem para Login / Cadastro</label>
-                    <span className="admin-field-help">Visual usado nas páginas de autenticação.</span>
-                    <input type="file" accept="image/*" onChange={(e) => setCarouselAuthFile(e.target.files?.[0] || null)} />
-                    <div style={{ marginTop: 8 }}>
-                      <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 18 }}>
-                  <h3>Imagens: Home</h3>
-                  <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('home')}>Recarregar</button>
-                  <div className="admin-list" style={{ marginTop: 12 }}>
-                    {carouselItemsHome.length === 0 ? (
-                      <p className="chat-status">Nenhuma imagem cadastrada para Home.</p>
-                    ) : (
-                      carouselItemsHome.map((item) => (
-                        <article key={item._id} className="admin-list-item">
-                          <div>
-                            <strong>{item.slot}</strong>
-                            <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
-                            <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'home')}>Remover</button>
-                          </div>
-                        </article>
-                      ))
-                    )}
-                  </div>
-
-                  <h3 style={{ marginTop: 18 }}>Imagens: Login / Cadastro</h3>
-                  <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('auth')}>Recarregar</button>
-                  <div className="admin-list" style={{ marginTop: 12 }}>
-                    {carouselItemsAuth.length === 0 ? (
-                      <p className="chat-status">Nenhuma imagem cadastrada para Login/Cadastro.</p>
-                    ) : (
-                      carouselItemsAuth.map((item) => (
-                        <article key={item._id} className="admin-list-item">
-                          <div>
-                            <strong>{item.slot}</strong>
-                            <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
-                            <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'auth')}>Remover</button>
-                          </div>
-                        </article>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-          {activeSection === 'carousel' && (
-            <div className="admin-section-card">
-              <div className="admin-section-header">
-                <div>
-                  <h2>Carrossel de imagens</h2>
-                  <p className="auth-description">Envie imagens que aparecem na home e nas telas de login/cadastro.</p>
-                </div>
-              </div>
-
-              <div className="admin-form admin-form-grid">
-                <div className="admin-field">
-                  <label>Adicionar imagem para a Home</label>
-                  <span className="admin-field-help">Aparece ao lado do título na página inicial.</span>
-                  <input type="file" accept="image/*" onChange={(e) => setCarouselHomeFile(e.target.files?.[0] || null)} />
-                  <div style={{ marginTop: 8 }}>
-                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
-                  </div>
-                </div>
-
-                <div className="admin-field">
-                  <label>Adicionar imagem para Login / Cadastro</label>
-                  <span className="admin-field-help">Visual usado nas páginas de autenticação.</span>
-                  <input type="file" accept="image/*" onChange={(e) => setCarouselAuthFile(e.target.files?.[0] || null)} />
-                  <div style={{ marginTop: 8 }}>
-                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 18 }}>
-                <h3>Imagens: Home</h3>
-                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('home')}>Recarregar</button>
-                <div className="admin-list" style={{ marginTop: 12 }}>
-                  {carouselItemsHome.length === 0 ? (
-                    <p className="chat-status">Nenhuma imagem cadastrada para Home.</p>
-                  ) : (
-                    carouselItemsHome.map((item) => (
-                      <article key={item._id} className="admin-list-item">
-                        <div>
-                          <strong>{item.slot}</strong>
-                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
-                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'home')}>Remover</button>
-                        </div>
-                      </article>
-                    ))
-                  )}
-                </div>
-
-                <h3 style={{ marginTop: 18 }}>Imagens: Login / Cadastro</h3>
-                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('auth')}>Recarregar</button>
-                <div className="admin-list" style={{ marginTop: 12 }}>
-                  {carouselItemsAuth.length === 0 ? (
-                    <p className="chat-status">Nenhuma imagem cadastrada para Login/Cadastro.</p>
-                  ) : (
-                    carouselItemsAuth.map((item) => (
-                      <article key={item._id} className="admin-list-item">
-                        <div>
-                          <strong>{item.slot}</strong>
-                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
-                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'auth')}>Remover</button>
-                        </div>
-                      </article>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
                 </div>
               </div>
 
@@ -1259,6 +1128,81 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {activeSection === 'carousel' && (
+            <div className="admin-section-card">
+              <div className="admin-section-header">
+                <div>
+                  <h2>Carrossel de imagens</h2>
+                  <p className="auth-description">Envie imagens que aparecem na home e nas telas de login/cadastro.</p>
+                </div>
+              </div>
+
+              <div className="admin-form admin-form-grid">
+                <div className="admin-field">
+                  <label>Adicionar imagem para a Home</label>
+                  <span className="admin-field-help">Aparece ao lado do título na página inicial.</span>
+                  <input type="file" accept="image/*" onChange={(e) => setCarouselHomeFile(e.target.files?.[0] || null)} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
+                  </div>
+                </div>
+
+                <div className="admin-field">
+                  <label>Adicionar imagem para Login / Cadastro</label>
+                  <span className="admin-field-help">Visual usado nas páginas de autenticação.</span>
+                  <input type="file" accept="image/*" onChange={(e) => setCarouselAuthFile(e.target.files?.[0] || null)} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 18 }}>
+                <h3>Imagens: Home</h3>
+                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('home')}>Recarregar</button>
+                <div className="admin-list" style={{ marginTop: 12 }}>
+                  {carouselItemsHome.length === 0 ? (
+                    <p className="chat-status">Nenhuma imagem cadastrada para Home.</p>
+                  ) : (
+                    carouselItemsHome.map((item) => (
+                      <article key={item._id} className="admin-list-item">
+                        <div>
+                          <strong>{item.slot}</strong>
+                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'home')}>Remover</button>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+
+                <h3 style={{ marginTop: 18 }}>Imagens: Login / Cadastro</h3>
+                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('auth')}>Recarregar</button>
+                <div className="admin-list" style={{ marginTop: 12 }}>
+                  {carouselItemsAuth.length === 0 ? (
+                    <p className="chat-status">Nenhuma imagem cadastrada para Login/Cadastro.</p>
+                  ) : (
+                    carouselItemsAuth.map((item) => (
+                      <article key={item._id} className="admin-list-item">
+                        <div>
+                          <strong>{item.slot}</strong>
+                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'auth')}>Remover</button>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1383,11 +1327,24 @@ export default function AdminDashboard() {
                         <span>{item.mensagem}</span>
                       </div>
                       <div className="admin-inline-actions">
-                        <span className={`admin-chip ${item.status === 'Pendente' ? 'warning' : 'success'}`}>{item.status}</span>
-                        <button type="button" className="btn-pill outline" onClick={() => atualizarDenuncia(item.id, item.status === 'Pendente' ? 'Revisada' : 'Pendente')}>
-                          {item.status === 'Pendente' ? 'Avaliar' : 'Reabrir'}
+                        <button
+                          type="button"
+                          className="btn-pill outline"
+                          onClick={() => atualizarAcaoMensagem(item.id, 'Mantida')}
+                          disabled={!item.chatId || !item.comentarioId || item.acaoMensagem === 'Mantida'}
+                          title={!item.chatId || !item.comentarioId ? 'Esta denúncia não possui vínculo com uma mensagem.' : 'Manter mensagem'}
+                        >
+                          Manter mensagem
                         </button>
-                        <button type="button" className="btn-pill" onClick={() => handleRemoverDenuncia(item.id)}>Remover</button>
+                        <button
+                          type="button"
+                          className="btn-pill"
+                          onClick={() => atualizarAcaoMensagem(item.id, 'Removida')}
+                          disabled={!item.chatId || !item.comentarioId || item.acaoMensagem === 'Removida'}
+                          title={!item.chatId || !item.comentarioId ? 'Esta denúncia não possui vínculo com uma mensagem.' : 'Apagar mensagem'}
+                        >
+                          Apagar mensagem
+                        </button>
                       </div>
                     </article>
                   ))

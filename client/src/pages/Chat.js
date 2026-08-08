@@ -6,13 +6,30 @@ function getStoredToken() {
   return localStorage.getItem('token');
 }
 
-function getStoredReports() {
+function getReportsStorageKey(userId) {
+  return userId ? `chat_denuncias_${userId}` : null;
+}
+
+function getStoredReports(userId) {
+  if (!userId) {
+    return [];
+  }
+
   try {
-    const raw = localStorage.getItem('chat_denuncias');
+    const raw = localStorage.getItem(getReportsStorageKey(userId));
     return raw ? JSON.parse(raw) : [];
   } catch (error) {
     return [];
   }
+}
+
+function saveStoredReports(userId, reports) {
+  const storageKey = getReportsStorageKey(userId);
+  if (!storageKey) {
+    return;
+  }
+
+  localStorage.setItem(storageKey, JSON.stringify(reports));
 }
 
 export default function Chat() {
@@ -23,10 +40,15 @@ export default function Chat() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
-  const [reportedIds, setReportedIds] = useState(getStoredReports);
   const [encontroAtual, setEncontroAtual] = useState('');
   const messagesEndRef = useRef(null);
   const usuarioAtual = getStoredUser();
+  const usuarioAtualId = usuarioAtual?._id || usuarioAtual?.id || null;
+  const [reportedIds, setReportedIds] = useState(() => getStoredReports(usuarioAtualId));
+
+  useEffect(() => {
+    setReportedIds(getStoredReports(usuarioAtualId));
+  }, [usuarioAtualId]);
 
   const carregarEncontroAtual = async () => {
     try {
@@ -164,7 +186,7 @@ export default function Chat() {
 
     const nextReports = [...new Set([...reportedIds, comentarioId])];
     setReportedIds(nextReports);
-    localStorage.setItem('chat_denuncias', JSON.stringify(nextReports));
+    saveStoredReports(usuarioAtualId, nextReports);
     setSucesso('Mensagem denunciada. A equipe será notificada.');
     // enviar denúncia ao servidor
     try {
@@ -173,6 +195,8 @@ export default function Chat() {
         autor: getStoredUser()?.nome_usuario || getStoredUser()?.nome || 'Anônimo',
         motivo: 'Chat',
         mensagem: comentario?.texto || 'Denúncia de mensagem do chat',
+        chatId: chat?._id,
+        comentarioId,
       };
 
       fetch('http://localhost:7777/api/denuncias', {
@@ -213,11 +237,9 @@ export default function Chat() {
               {chat?.comentarios?.length ? (
                 chat.comentarios.map((comentario) => {
                   const nomeUsuario = comentario.usuario?.nome_usuario || 'Usuário';
+                  const comentarioUsuarioId = comentario.usuario?._id || comentario.usuario?.id || null;
                   const isCurrentUser = Boolean(
-                    usuarioAtual &&
-                      (comentario.usuario?._id === usuarioAtual._id ||
-                        comentario.usuario?.nome_usuario === usuarioAtual.nome_usuario ||
-                        comentario.usuario?.nome_usuario === usuarioAtual.nome)
+                    usuarioAtualId && comentarioUsuarioId && String(comentarioUsuarioId) === String(usuarioAtualId)
                   );
 
                   return (
