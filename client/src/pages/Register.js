@@ -8,6 +8,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mensagem, setMensagem] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
@@ -102,14 +103,24 @@ export default function Register() {
           />
 
           <label htmlFor="senha">Defina uma senha</label>
-          <input
-            id="senha"
-            type="password"
-            placeholder="ex. abc1234"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-          />
+          <div className="password-field-wrapper">
+            <input
+              id="senha"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="ex. abc1234"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
+          </div>
 
           {mensagem && <p className="auth-message">{mensagem}</p>}
 

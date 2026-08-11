@@ -39,8 +39,8 @@ export default function Home() {
 
       <section className="content-section grid-split" id="quem-somos">
         <div className="image-stack">
-          <img src="/imagens/jojo.jpg" alt="Atividade do clube" />
-          <img src="/imagens/cheerleader.jpg" alt="Sessão do clube" />
+          <div className="who-placeholder" aria-hidden="true" />
+          <div className="who-placeholder" aria-hidden="true" />
         </div>
         <article className="text-panel">
           <h2>QUEM SOMOS?</h2>

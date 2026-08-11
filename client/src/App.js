@@ -44,6 +44,7 @@ export default function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="app-shell">
         <Routes>
           <Route
@@ -136,6 +137,16 @@ export default function App() {
       </div>
     </Router>
   );
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [pathname]);
+
+  return null;
 }
 
 function ChatButtonWithVisibility() {

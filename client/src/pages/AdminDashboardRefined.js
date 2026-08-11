@@ -580,6 +580,7 @@ export default function AdminDashboard() {
   const [carouselItemsAuth, setCarouselItemsAuth] = useState([]);
   const [loadingCarouselHome, setLoadingCarouselHome] = useState(false);
   const [loadingCarouselAuth, setLoadingCarouselAuth] = useState(false);
+  const [carouselPreviewSlot, setCarouselPreviewSlot] = useState('home');
 
   const carregarCarouselSlot = async (slot) => {
     try {
@@ -603,6 +604,7 @@ export default function AdminDashboard() {
     if (activeSection === 'carousel') {
       carregarCarouselSlot('home');
       carregarCarouselSlot('auth');
+      setCarouselPreviewSlot('home');
     }
   }, [activeSection]);
 
@@ -1160,47 +1162,42 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 18 }}>
-                <h3>Imagens: Home</h3>
-                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('home')}>Recarregar</button>
-                <div className="admin-list" style={{ marginTop: 12 }}>
-                  {carouselItemsHome.length === 0 ? (
-                    <p className="chat-status">Nenhuma imagem cadastrada para Home.</p>
-                  ) : (
-                    carouselItemsHome.map((item) => (
-                      <article key={item._id} className="admin-list-item">
-                        <div>
-                          <strong>{item.slot}</strong>
-                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
-                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'home')}>Remover</button>
-                        </div>
-                      </article>
-                    ))
-                  )}
+              <div className="admin-carousel-panel">
+                <div className="admin-carousel-toolbar">
+                  <button type="button" className={`btn-pill outline ${carouselPreviewSlot === 'home' ? 'active' : ''}`} onClick={() => setCarouselPreviewSlot('home')}>
+                    Ver imagens da Home
+                  </button>
+                  <button type="button" className={`btn-pill outline ${carouselPreviewSlot === 'auth' ? 'active' : ''}`} onClick={() => setCarouselPreviewSlot('auth')}>
+                    Ver imagens Login/Cadastro
+                  </button>
                 </div>
 
-                <h3 style={{ marginTop: 18 }}>Imagens: Login / Cadastro</h3>
-                <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot('auth')}>Recarregar</button>
-                <div className="admin-list" style={{ marginTop: 12 }}>
-                  {carouselItemsAuth.length === 0 ? (
-                    <p className="chat-status">Nenhuma imagem cadastrada para Login/Cadastro.</p>
-                  ) : (
-                    carouselItemsAuth.map((item) => (
-                      <article key={item._id} className="admin-list-item">
-                        <div>
-                          <strong>{item.slot}</strong>
-                          <p style={{ maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.url}</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
-                          <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, 'auth')}>Remover</button>
-                        </div>
-                      </article>
-                    ))
-                  )}
+                <div className="admin-carousel-preview">
+                  <div className="admin-carousel-preview-header">
+                    <div>
+                      <h3>{carouselPreviewSlot === 'home' ? 'Imagens da Home' : 'Imagens de Login / Cadastro'}</h3>
+                      <p className="admin-field-help">Clique em um botão para abrir o conjunto de imagens correspondente.</p>
+                    </div>
+                    <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot(carouselPreviewSlot)}>
+                      Recarregar
+                    </button>
+                  </div>
+
+                  <div className="admin-carousel-grid">
+                    {(carouselPreviewSlot === 'home' ? carouselItemsHome : carouselItemsAuth).length === 0 ? (
+                      <p className="chat-status">Nenhuma imagem cadastrada para {carouselPreviewSlot === 'home' ? 'Home' : 'Login/Cadastro'}.</p>
+                    ) : (
+                      (carouselPreviewSlot === 'home' ? carouselItemsHome : carouselItemsAuth).map((item) => (
+                        <article key={item._id} className="admin-carousel-item">
+                          <img src={item.url} alt={item.slot} />
+                          <div className="admin-carousel-item-actions">
+                            <button type="button" className="btn-pill outline" onClick={() => window.open(item.url, '_blank')}>Abrir</button>
+                            <button type="button" className="btn-pill" onClick={() => handleDeleteCarousel(item._id, carouselPreviewSlot)}>Remover</button>
+                          </div>
+                        </article>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -60,15 +60,17 @@ export default function ImageCarousel({ images = [], slot = null, interval = 350
 
   return (
     <div className={`carousel-container ${className}`}>
-      {list.map((src, i) => (
-        <img
-          key={src + i}
-          src={src}
-          alt="carousel"
-          className={`carousel-img ${i === index ? 'active' : ''}`}
-          style={{ display: i === index ? 'block' : 'none' }}
-        />
-      ))}
+      <div className="carousel-frame">
+        {list.map((src, i) => (
+          <img
+            key={src + i}
+            src={src}
+            alt="carousel"
+            className={`carousel-img ${i === index ? 'active' : ''}`}
+            style={{ display: i === index ? 'block' : 'none' }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
