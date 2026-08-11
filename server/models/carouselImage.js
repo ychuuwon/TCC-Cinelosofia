@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const carouselImageSchema = new mongoose.Schema({
   slot: {
     type: String,
-    enum: ['home', 'login', 'register'],
+    enum: ['home', 'login', 'register', 'auth'],
     required: true,
   },
   url: {
