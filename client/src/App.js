@@ -15,7 +15,7 @@ import Curtametragens from './pages/Curtametragens';
 import Chat from './pages/Chat';
 import AdminPresencas from './pages/AdminPresencas';
 import AdminDashboard from './pages/AdminDashboardRefined';
-import { markLogin, markLogout } from './auth';
+import { isAdmin, markLogin, markLogout } from './auth';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -116,19 +116,23 @@ export default function App() {
           <Route
             path="/admin"
             element={(
-              <>
-                <Navbar token={token} user={user} onLogout={handleLogout} />
-                <AdminDashboard />
-              </>
+              <AdminOnlyRoute>
+                <>
+                  <Navbar token={token} user={user} onLogout={handleLogout} />
+                  <AdminDashboard />
+                </>
+              </AdminOnlyRoute>
             )}
           />
           <Route
             path="/admin/encontros/:id/presencas"
             element={(
-              <>
-                <Navbar token={token} user={user} onLogout={handleLogout} />
-                <AdminPresencas />
-              </>
+              <AdminOnlyRoute>
+                <>
+                  <Navbar token={token} user={user} onLogout={handleLogout} />
+                  <AdminPresencas />
+                </>
+              </AdminOnlyRoute>
             )}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -137,6 +141,16 @@ export default function App() {
       </div>
     </Router>
   );
+}
+
+function AdminOnlyRoute({ children }) {
+  const userIsAdmin = isAdmin();
+
+  if (!userIsAdmin) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 }
 
 function ScrollToTop() {

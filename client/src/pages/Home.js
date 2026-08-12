@@ -88,13 +88,13 @@ export default function Home() {
         <h2 className="section-title light">ACERVOS</h2>
         <div className="acervo-grid">
           <Link to="/acervos/encontros" className="acervo-card">
-            <img src="/imagens/jojo.jpg" alt="Filmes e encontros" />
+            <img src="https://res.cloudinary.com/cinelosofia/image/upload/v1786498043/cinelosofia/encontros.png" alt="Registros de encontros" />
             <h3>REGISTROS DE ENCONTROS</h3>
             <p>Aqui você encontra os encontros publicados com todas as informações originalmente cadastradas.</p>
             <span className="btn-mini">ACESSAR</span>
           </Link>
           <Link to="/acervos/curtas" className="acervo-card">
-            <img src="/imagens/curtas.png" alt="Curtas-Metragens" />
+            <img src="https://res.cloudinary.com/cinelosofia/image/upload/v1786498221/cinelosofia/curtas-acervo-cover-v2.png" alt="Curtas-Metragens" />
             <h3>CURTAS-METRAGENS</h3>
             <p>Aqui você encontra os curtas produzidos pelos alunos do IFC - Campus Sombrio.</p>
             <span className="btn-mini">ACESSAR</span>

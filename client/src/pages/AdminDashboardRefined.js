@@ -278,6 +278,29 @@ export default function AdminDashboard() {
 
   
 
+  const idsEncontrosPublicados = new Set(
+    (Array.isArray(registrosEncontros) ? registrosEncontros : [])
+      .map((registro) => {
+        const id = registro.encontro_original?._id || registro.encontro_original || registro.encontro_snapshot?._id;
+        return id ? String(id) : null;
+      })
+      .filter(Boolean)
+  );
+
+  const encontrosDisponiveisFiltrados = (Array.isArray(encontrosDisponiveis) ? encontrosDisponiveis : []).filter((encontro) => {
+    const encontroId = String(encontro._id || encontro.id || '');
+
+    if (!encontroId) {
+      return true;
+    }
+
+    if (novoRegistroEncontro.encontroId && String(novoRegistroEncontro.encontroId) === encontroId) {
+      return true;
+    }
+
+    return !idsEncontrosPublicados.has(encontroId);
+  });
+
   const encontroSelecionado = encontrosDisponiveis.find((item) => item._id === novoRegistroEncontro.encontroId) || null;
 
   const sincronizarEncontroPublico = () => {
@@ -1224,7 +1247,7 @@ export default function AdminDashboard() {
                     required
                   >
                     <option value="">Selecione um encontro cadastrado</option>
-                    {encontrosDisponiveis.map((encontro) => (
+                    {encontrosDisponiveisFiltrados.map((encontro) => (
                       <option key={encontro._id} value={encontro._id}>
                         {encontro.tema}
                       </option>
