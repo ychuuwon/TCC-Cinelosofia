@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
+import Poll from '../components/Poll';
 
 export default function Home() {
   const [proximoEncontro, setProximoEncontro] = useState(null);
@@ -53,35 +54,41 @@ export default function Home() {
 
       <section className="content-section" id="proximo-encontro">
         <h2 className="section-title">PRÓXIMO ENCONTRO</h2>
-        <div className="next-meet-card">
-          <div className="next-meet-poster-column">
-            {proximoEncontro?.foto_capa ? (
-              <img src={proximoEncontro.foto_capa} alt={proximoEncontro?.tema || 'Próximo encontro'} />
-            ) : null}
-            <Link to="/encontros/proximo" className="btn-pill next-meet-cta">Saiba mais e PARTICIPE!</Link>
-          </div>
-          <div className="next-meet-copy">
-            <div className="next-meet-content">
-              <h3>{proximoEncontro?.tema || 'Nenhum encontro cadastrado'}</h3>
-              <p>
-                {proximoEncontro?.sinopse || proximoEncontro?.obs || 'Quando o administrador cadastrar um encontro, as informações aparecerão aqui automaticamente.'}
-              </p>
-              {proximoEncontro?.ano && <p><strong>Ano de lançamento:</strong> {proximoEncontro.ano}</p>}
-              {proximoEncontro?.direcao && <p><strong>Direção:</strong> {proximoEncontro.direcao}</p>}
-              {proximoEncontro?.genero && <p><strong>Gênero:</strong> {proximoEncontro.genero}</p>}
+        {proximoEncontro && proximoEncontro._id ? (
+          <div className="next-meet-card">
+            <div className="next-meet-poster-column">
+              {proximoEncontro.foto_capa ? (
+                <img src={proximoEncontro.foto_capa} alt={proximoEncontro?.tema || 'Próximo encontro'} />
+              ) : null}
+              <Link to="/encontros/proximo" className="btn-pill next-meet-cta">Saiba mais e PARTICIPE!</Link>
             </div>
-            <div className="next-meet-meta">
-              {proximoEncontro?.data && <p><strong>Data:</strong> {new Date(proximoEncontro.data).toLocaleDateString('pt-BR')}</p>}
-              {proximoEncontro?.hora && <p><strong>Hora:</strong> {proximoEncontro.hora}</p>}
-              {proximoEncontro?.local && <p><strong>Local:</strong> {proximoEncontro.local}</p>}
-              {proximoEncontro?.duracao && <p><strong>Duração:</strong> {proximoEncontro.duracao}</p>}
-              {proximoEncontro?.obs && <p><strong>OBS:</strong> {proximoEncontro.obs}</p>}
-              {proximoEncontro?.trailer && (
-                <p><strong>Trailer:</strong> <a href={proximoEncontro.trailer} target="_blank" rel="noreferrer">Assistir trailer</a></p>
-              )}
+            <div className="next-meet-copy">
+              <div className="next-meet-content">
+                <h3>{proximoEncontro?.tema || 'Nenhum encontro ativo, espere as próximas sessões e informações :)'}</h3>
+                <p>
+                  {proximoEncontro?.sinopse || proximoEncontro?.obs || 'Nenhum encontro ativo, espere as próximas sessões e informações :)'}
+                </p>
+                {proximoEncontro?.ano && <p><strong>Ano de lançamento:</strong> {proximoEncontro.ano}</p>}
+                {proximoEncontro?.direcao && <p><strong>Direção:</strong> {proximoEncontro.direcao}</p>}
+                {proximoEncontro?.genero && <p><strong>Gênero:</strong> {proximoEncontro.genero}</p>}
+              </div>
+              <div className="next-meet-meta">
+                {proximoEncontro?.data && <p><strong>Data:</strong> {new Date(proximoEncontro.data).toLocaleDateString('pt-BR')}</p>}
+                {proximoEncontro?.hora && <p><strong>Hora:</strong> {proximoEncontro.hora}</p>}
+                {proximoEncontro?.local && <p><strong>Local:</strong> {proximoEncontro.local}</p>}
+                {proximoEncontro?.duracao && <p><strong>Duração:</strong> {proximoEncontro.duracao}</p>}
+                {proximoEncontro?.obs && <p><strong>OBS:</strong> {proximoEncontro.obs}</p>}
+                {proximoEncontro?.trailer && (
+                  <p><strong>Trailer:</strong> <a href={proximoEncontro.trailer} target="_blank" rel="noreferrer">Assistir trailer</a></p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="next-meet-card">
+            <Poll compact />
+          </div>
+        )}
       </section>
 
       <section className="content-section acervo-showcase" id="acervos">

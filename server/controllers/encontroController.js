@@ -16,12 +16,10 @@ const buscarProximo = async (req, res) => {
   try {
     const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
 
-    if (encontroAtual) {
-      return res.status(200).json(encontroAtual);
-    }
-
-    const encontroMaisRecente = await Encontro.findOne().sort({ createdAt: -1 });
-    return res.status(200).json(encontroMaisRecente || {});
+    // Retorna apenas quando houver um encontro com `destaque: true`.
+    // Não retornar o encontro mais recente por padrão evita exibir encontros
+    // que já foram movidos para o acervo/registro.
+    return res.status(200).json(encontroAtual || {});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao carregar o próximo encontro.' });
@@ -32,12 +30,10 @@ const buscarAtivo = async (req, res) => {
   try {
     const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
 
-    if (encontroAtual) {
-      return res.status(200).json(encontroAtual);
-    }
-
-    const encontroMaisRecente = await Encontro.findOne().sort({ createdAt: -1 });
-    return res.status(200).json(encontroMaisRecente || {});
+    // Retornar apenas quando houver um encontro com `destaque: true`.
+    // Isso garante que, se um encontro foi publicado no acervo/registro
+    // e não possui mais `destaque`, ele não seja exibido como ativo.
+    return res.status(200).json(encontroAtual || {});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao carregar o encontro ativo.' });
@@ -250,6 +246,10 @@ const registrarPresenca = async (req, res) => {
     const encontro = await Encontro.findById(encontroId);
     if (!encontro) {
       return res.status(404).json({ erro: 'Encontro não encontrado.' });
+    }
+
+    if (!encontro.destaque) {
+      return res.status(400).json({ erro: 'Não é possível registrar presença neste encontro. O encontro não está ativo.' });
     }
 
     const jaRegistrado = encontro.presencas.some((item) => item.usuario?.toString() === usuario._id.toString());

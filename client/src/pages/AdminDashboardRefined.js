@@ -8,6 +8,7 @@ const MENU_ITEMS = [
   { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas publicados no acervo' },
   { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do carrossel (home / login / register)' },
   { id: 'registros', label: 'Registros de encontros', description: 'Publique registros a partir de encontros já cadastrados' },
+  { id: 'enquetes', label: 'Enquetes', description: 'Publique enquetes que aparecem na home enquanto não houver encontro ativo' },
   { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas' },
 ];
 
@@ -162,6 +163,11 @@ export default function AdminDashboard() {
   const [loadingPresencas, setLoadingPresencas] = useState(false);
   const [mensagemPresencas, setMensagemPresencas] = useState('');
   const [registrosEncontros, setRegistrosEncontros] = useState([]);
+  const [enquetes, setEnquetes] = useState([]);
+  const [loadingEnquetes, setLoadingEnquetes] = useState(false);
+  const [novoEnquete, setNovoEnquete] = useState({ titulo: '', options: [{ titulo: '', sinopse: '', capa: '' }] });
+  const [salvandoEnquete, setSalvandoEnquete] = useState(false);
+  const [mensagemEnquete, setMensagemEnquete] = useState('');
   const [novoRegistroEncontro, setNovoRegistroEncontro] = useState(emptyRegistroEncontro);
   const [loadingRegistros, setLoadingRegistros] = useState(true);
   const [salvandoRegistroEncontro, setSalvandoRegistroEncontro] = useState(false);
@@ -204,6 +210,7 @@ export default function AdminDashboard() {
         carregarCurtas(),
         carregarEncontrosDisponiveis(),
         carregarRegistrosEncontros(),
+        carregarEnquetes(),
       ]);
     };
 
@@ -345,6 +352,19 @@ export default function AdminDashboard() {
     }
   }
 
+  async function carregarEnquetes() {
+    setLoadingEnquetes(true);
+    try {
+      const resp = await fetch(`${API_BASE}/enquetes`);
+      const data = await resp.json();
+      setEnquetes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setEnquetes([]);
+    } finally {
+      setLoadingEnquetes(false);
+    }
+  }
+
   const uploadImagemCloudinary = async (arquivo) => {
     const token = localStorage.getItem('token');
 
@@ -370,6 +390,101 @@ export default function AdminDashboard() {
     }
 
     return data.url || '';
+  };
+
+  const handleUploadOptionImage = async (file, optionIndex) => {
+    try {
+      const url = await uploadImagemCloudinary(file);
+      setNovoEnquete((prev) => {
+        const copy = { ...prev };
+        copy.options = Array.isArray(copy.options) ? copy.options.slice() : [];
+        copy.options[optionIndex] = { ...copy.options[optionIndex], capa: url };
+        return copy;
+      });
+    } catch (err) {
+      setMensagemEnquete(err.message || 'Erro ao enviar imagem da opção.');
+    }
+  };
+
+  const handleAddOption = () => {
+    setNovoEnquete((prev) => ({ ...prev, options: [...(prev.options || []), { titulo: '', sinopse: '', capa: '' }] }));
+  };
+
+  const handleRemoveOption = (index) => {
+    setNovoEnquete((prev) => ({ ...prev, options: prev.options.filter((_, i) => i !== index) }));
+  };
+
+  const handleSalvarEnquete = async (event) => {
+    event.preventDefault();
+    setMensagemEnquete('');
+      if (!novoEnquete.titulo || !Array.isArray(novoEnquete.options) || novoEnquete.options.length === 0) {
+        setMensagemEnquete('Preencha título e ao menos uma opção para criar a enquete.');
+        return;
+      }
+
+      // validação das opções: cada opção precisa de título
+      for (let i = 0; i < novoEnquete.options.length; i += 1) {
+        const opt = novoEnquete.options[i];
+        if (!opt || !opt.titulo || String(opt.titulo).trim() === '') {
+          setMensagemEnquete(`Preencha o título da opção ${i + 1}.`);
+          return;
+        }
+      }
+
+    const token = localStorage.getItem('token');
+    if (!token) { setMensagemEnquete('Faça login como administrador para salvar a enquete.'); return; }
+
+    setSalvandoEnquete(true);
+    try {
+      const response = await fetch(`${API_BASE}/enquetes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(novoEnquete),
+      });
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (e) {
+          // fallback to text when server doesn't return JSON
+          const txt = await response.text().catch(() => '');
+          data = { erro: txt || '' };
+        }
+
+        if (!response.ok) {
+          const msg = data.erro || data.mensagem || 'Não foi possível criar enquete.';
+          setMensagemEnquete(msg);
+          return;
+        }
+
+        setMensagemEnquete('Enquete criada com sucesso. Abra-a quando quiser aceitar votos.');
+        setNovoEnquete({ titulo: '', options: [{ titulo: '', sinopse: '', capa: '' }] });
+        await carregarEnquetes();
+      } catch (err) {
+        setMensagemEnquete(err.message || 'Erro ao criar enquete.');
+      } finally { setSalvandoEnquete(false); }
+  };
+
+  const handleAbrirFecharEnquete = async (id, abrir) => {
+    const token = localStorage.getItem('token');
+    if (!token) { alert('Faça login como administrador'); return; }
+    try {
+      const resp = await fetch(`${API_BASE}/enquetes/${id}/open`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ isOpen: abrir }) });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.erro || data.mensagem || 'Erro ao atualizar enquete.');
+      await carregarEnquetes();
+      try { window.dispatchEvent(new Event('enquete-atualizada')); } catch (e) {}
+    } catch (err) { alert(err.message || 'Erro'); }
+  };
+
+  const handleRemoverEnquete = async (id) => {
+    if (!window.confirm('Remover esta enquete?')) return;
+    const token = localStorage.getItem('token');
+    if (!token) { alert('Faça login como administrador'); return; }
+    try {
+      const resp = await fetch(`${API_BASE}/enquetes/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.erro || 'Erro ao remover'); }
+      await carregarEnquetes();
+    } catch (err) { alert(err.message || 'Erro'); }
   };
 
   const carregarEncontroAtual = async () => {
@@ -1222,6 +1337,91 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'enquetes' && (
+            <div className="admin-section-card">
+              <div className="admin-section-header">
+                <div>
+                    <h2>Enquetes</h2>
+                    <p className="auth-description">Crie enquetes com opções de filmes; abra para votação quando desejar.</p>
+                    <div className="admin-field admin-field--small admin-field--header">
+                      <label htmlFor="enquete-titulo">Título da enquete</label>
+                      <input
+                        id="enquete-titulo"
+                        type="text"
+                        value={novoEnquete.titulo}
+                        onChange={(e) => setNovoEnquete((p) => ({ ...p, titulo: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+              </div>
+
+              {mensagemEnquete && <p className="chat-status success">{mensagemEnquete}</p>}
+
+              <form className="admin-form admin-form-grid enquetes-form" onSubmit={handleSalvarEnquete}>
+
+                <div className="admin-field admin-field-full">
+                  <label>Opções (título, sinopse, capa pequena)</label>
+                  {Array.isArray(novoEnquete.options) && novoEnquete.options.map((opt, idx) => (
+                    <div key={idx} className="admin-option-row">
+                      <input
+                        type="text"
+                        placeholder="Título do filme"
+                        value={opt.titulo}
+                        onChange={(e) => setNovoEnquete((prev) => { const copy = { ...prev }; copy.options = copy.options.slice(); copy.options[idx] = { ...copy.options[idx], titulo: e.target.value }; return copy; })}
+                        required
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Breve sinopse"
+                        value={opt.sinopse}
+                        onChange={(e) => setNovoEnquete((prev) => { const copy = { ...prev }; copy.options = copy.options.slice(); copy.options[idx] = { ...copy.options[idx], sinopse: e.target.value }; return copy; })}
+                      />
+
+                      <div className="admin-option-row-controls">
+                        <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) handleUploadOptionImage(f, idx); }} />
+                        {opt.capa ? <img src={opt.capa} alt="capa" /> : null}
+                        <button type="button" className="btn-pill outline" onClick={() => handleRemoveOption(idx)}>Remover</button>
+                      </div>
+                    </div>
+                  ))}
+                  <div>
+                    <button type="button" className="btn-pill" onClick={handleAddOption}>Adicionar opção</button>
+                  </div>
+                </div>
+
+                <div className="admin-form-actions">
+                  <button type="submit" className="btn-primary" disabled={salvandoEnquete}>{salvandoEnquete ? 'Salvando...' : 'Criar enquete'}</button>
+                </div>
+              </form>
+
+              <hr />
+
+              <div>
+                {loadingEnquetes ? (
+                  <p className="chat-status">Carregando enquetes...</p>
+                ) : enquetes.length === 0 ? (
+                  <p className="chat-status">Nenhuma enquete publicada ainda.</p>
+                ) : (
+                  enquetes.map((eq) => (
+                    <article key={eq._id} className="admin-list-item admin-list-item-stack">
+                      <div className="admin-list-item-main">
+                        <strong>{eq.titulo}</strong>
+                        <p>{Array.isArray(eq.options) ? `${eq.options.length} opção(ões)` : ''}</p>
+                        <span>{eq.isOpen ? 'Aberta para votos' : 'Fechada'}</span>
+                      </div>
+                      <div className="admin-list-actions">
+                        <button type="button" className="btn-pill" onClick={() => handleAbrirFecharEnquete(eq._id, !eq.isOpen)}>{eq.isOpen ? 'Fechar votação' : 'Abrir votação'}</button>
+                        <button type="button" className="btn-pill outline" onClick={() => handleRemoverEnquete(eq._id)}>Remover</button>
+                      </div>
+                    </article>
+                  ))
+                )}
               </div>
             </div>
           )}

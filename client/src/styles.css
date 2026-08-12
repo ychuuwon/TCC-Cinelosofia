@@ -782,6 +782,158 @@ a {
   min-width: 0;
 }
 
+/* Enquete / Poll styles */
+.enquete-full {
+  padding: 12px;
+  /* quando a enquete é renderizada dentro de um container com duas colunas
+     (ex: .detail-card, .next-meet-card) deve ocupar ambas as colunas */
+  grid-column: 1 / -1;
+}
+
+.poll-panel {
+  padding: 18px;
+  display: block;
+  gap: 12px;
+}
+
+.poll-panel h3 {
+  font-size: 1.6rem;
+  margin: 0 0 12px 0;
+  position: sticky;
+  top: 0;
+  background: inherit;
+  padding: 8px 0;
+  z-index: 3;
+}
+
+.poll-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+}
+
+.poll-option {
+  background: var(--paper);
+  border: 4px solid var(--wine);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  min-height: 140px;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+.poll-options { align-items: stretch; }
+.poll-option { height: 100%; }
+
+.poll-option-image {
+  flex: 0 0 40%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  overflow: hidden;
+  /* remover moldura branca interna para que a capa não tenha borda
+     e ocupe a altura total do card */
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.poll-option-img {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border: none;
+  border-radius: 0;
+}
+
+.poll-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 60%;
+  min-height: 0;
+}
+
+.poll-meta {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.poll-result-info {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.poll-count { color: var(--ink); }
+.poll-percent { color: var(--wine); }
+
+.poll-progress {
+  width: 100%;
+  height: 10px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-left: 8px;
+}
+
+.poll-progress-bar {
+  height: 100%;
+  background: var(--wine);
+  transition: width 300ms ease;
+}
+
+.poll-option-body p { margin: 0; }
+
+@media (max-width: 720px) {
+  .poll-options { grid-template-columns: 1fr; }
+}
+
+/* Compact mode (home) adjustments */
+.poll-panel.compact {
+  padding: 8px 6px;
+}
+.poll-panel.compact h3 { display: none; }
+
+/* compact mode default small preview (mobile/home fallback) */
+.poll-panel.compact .poll-option-img { height: 100px; }
+
+/* When poll is shown inside the next-meet card on Home, make it visually
+   match the 'participe' page: larger, same-height cards and full-height covers */
+.next-meet-card > .poll-panel.compact .poll-option-img {
+  height: 100%;
+}
+
+.next-meet-card > .poll-panel .poll-option {
+  min-height: 240px;
+}
+
+/* quando o Poll é renderizado como filho direto do cartão 'next-meet-card',
+   deve ocupar ambas as colunas do cartão */
+.next-meet-card > .poll-panel {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* mostrar título quando o Poll é renderizado na Home (next-meet-card) */
+.next-meet-card > .poll-panel.compact h3 {
+  display: block;
+  font-size: 1.2rem;
+  margin: 0 0 8px 0;
+}
+
 .auth-header {
   display: flex;
   align-items: center;
@@ -1612,6 +1764,109 @@ a {
   gap: 6px;
 }
 
+.admin-field--small {
+  max-width: 420px;
+}
+
+.admin-field--small input,
+.admin-field--small textarea,
+.admin-field--small select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* Sticky small field used in admin enquetes to keep title visible when adding options */
+.admin-section-card .admin-field--sticky {
+  position: sticky;
+  top: 12px;
+  z-index: 6;
+  background: var(--paper);
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* Fixed title field for enquetes: positioned inside the card, not affected by added options */
+.enquetes-form {
+  padding-top: 12px;
+}
+
+/* Ensure the submit button appears directly below the options/add-remove controls */
+.enquetes-form .admin-form-actions {
+  margin-top: 8px;
+  grid-column: 1 / -1;
+}
+
+.admin-option-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .admin-option-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Restore normal sizing for option inputs (title, sinopse) */
+.enquetes-form .admin-option-row input[type="text"],
+.enquetes-form .admin-option-row textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(169, 31, 26, 0.2);
+}
+
+.enquetes-form .admin-option-row input[type="file"] {
+  min-width: 140px;
+}
+
+.enquetes-form .admin-option-row img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.admin-option-row-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-option-row-controls input[type="file"] {
+  min-width: 220px;
+}
+
+.admin-option-row-controls .btn-pill {
+  margin-left: auto;
+}
+
+/* Header small field styling */
+.admin-field--header {
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+.admin-field--header input {
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .admin-field--fixed {
+    position: static;
+    top: auto;
+    left: auto;
+    padding: 0;
+    background: transparent;
+  }
+  .enquetes-form { padding-top: 0; }
+}
+
 .admin-field label {
   font-size: 0.92rem;
   font-weight: 700;
@@ -1631,6 +1886,15 @@ a {
   border-radius: 10px;
   padding: 11px 12px;
   font-family: inherit;
+}
+
+/* Ensure small admin fields use reduced height (override default padding) */
+.admin-form .admin-field--small input,
+.admin-form .admin-field--small textarea,
+.admin-form .admin-field--small select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 1rem;
 }
 
 .admin-list {

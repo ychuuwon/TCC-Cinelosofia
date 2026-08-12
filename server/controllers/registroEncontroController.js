@@ -49,6 +49,17 @@ const criarRegistro = async (req, res) => {
       questoes_discussao,
     });
 
+    // Ao publicar o registro no acervo, desmarcamos o encontro como destaque
+    // para que ele não apareça mais como encontro ativo na home/participe.
+    try {
+      if (encontro.destaque) {
+        encontro.destaque = false;
+        await encontro.save();
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar destaque do encontro após publicar registro:', err);
+    }
+
     return res.status(201).json({
       mensagem: 'Registro de encontro criado com sucesso!',
       registro,

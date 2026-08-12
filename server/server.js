@@ -14,6 +14,7 @@ const registroEncontroRoutes = require('./routes/registroEncontroRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const carouselRoutes = require('./routes/carouselRoutes');
 const denunciaRoutes = require('./routes/denunciaRoutes');
+const enqueteRoutes = require('./routes/enqueteRoutes');
 const User = require('./models/User');
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/registros-encontros', registroEncontroRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/carousel', carouselRoutes);
 app.use('/api/denuncias', denunciaRoutes);
+app.use('/api/enquetes', enqueteRoutes);
 
 const ensureAdminUser = async () => {
   try {
