@@ -100,6 +100,10 @@ export default function Login({ onLogin }) {
             <button type="submit" className="btn-primary btn-pill">Entrar!</button>
             <Link to="/register" className="btn-primary outline btn-pill">Cadastre-se!</Link>
           </div>
+
+          <Link to="/forgot-password" className="forgot-password-link">
+            Recupere sua senha
+          </Link>
         </form>
       </section>
       <aside className="auth-visual login-visual">

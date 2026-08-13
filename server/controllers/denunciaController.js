@@ -4,7 +4,14 @@ const Chat = require('../models/chat');
 const listarDenuncias = async (req, res) => {
   try {
     const denuncias = await Denuncia.find().sort({ createdAt: -1 });
-    return res.status(200).json(denuncias);
+    
+    // Mapear denúncias para adicionar tipo mais legível
+    const denunciasFormatadas = denuncias.map((denuncia) => ({
+      ...denuncia.toObject(),
+      tipoRemetente: denuncia.tipo === 'moderador' ? '🤖 Moderador IA' : '👤 Usuário',
+    }));
+
+    return res.status(200).json(denunciasFormatadas);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao listar denúncias.' });

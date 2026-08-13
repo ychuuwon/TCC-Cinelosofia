@@ -15,6 +15,15 @@ const comentarioSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  moderado: {
+    type: Boolean,
+    default: false,
+  },
+  motivoSinalizacao: {
+    type: String,
+    default: null,
+  },
+  categoriasInfracoes: [String], // Ex: ['profanidade', 'hate_speech', 'harassment']
 });
 
 const chatSchema = new mongoose.Schema({

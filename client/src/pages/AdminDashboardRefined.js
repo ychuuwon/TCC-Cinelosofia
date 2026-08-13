@@ -4,12 +4,12 @@ const API_BASE = 'http://localhost:7777/api';
 
 const MENU_ITEMS = [
   { id: 'encontros', label: 'Próximos encontros', description: 'Edite o encontro que aparece na home' },
-  { id: 'presencas', label: 'Presenças', description: 'Acompanhe os alunos que confirmaram presença' },
-  { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas publicados no acervo' },
-  { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do carrossel (home / login / register)' },
-  { id: 'registros', label: 'Registros de encontros', description: 'Publique registros a partir de encontros já cadastrados' },
   { id: 'enquetes', label: 'Enquetes', description: 'Publique enquetes que aparecem na home enquanto não houver encontro ativo' },
+  { id: 'presencas', label: 'Presenças', description: 'Acompanhe os alunos que confirmaram presença' },
+  { id: 'registros', label: 'Registros de encontros', description: 'Publique registros a partir de encontros já cadastrados' },
   { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas' },
+  { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do carrossel (home / login / register)' },
+  { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas publicados no acervo' },
 ];
 
 const defaultState = {

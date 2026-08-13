@@ -1,4 +1,26 @@
 const Chat = require('../models/chat');
+const Denuncia = require('../models/denuncia');
+const { verificarModeracaoOpenAI } = require('../utils/moderacao');
+const { log } = require('../utils/logger');
+
+// Função auxiliar para registrar denúncia automática
+const registrarDenunciaModeracao = async (chatId, comentarioId, texto, motivoSinalizacao, categoriasInfracoes) => {
+  try {
+    await Denuncia.create({
+      autor: 'Moderador IA',
+      mensagem: texto,
+      motivo: motivoSinalizacao,
+      chatId,
+      comentarioId,
+      tipo: 'moderador',
+      categoriasInfracoes,
+      status: 'Pendente',
+    });
+    console.log(`✅ Denúncia automática registrada para comentário: ${comentarioId}`);
+  } catch (error) {
+    console.error('Erro ao registrar denúncia de moderação:', error);
+  }
+};
 
 const buscarTodos = async (req, res) => {
   try {
@@ -51,6 +73,7 @@ const criarChat = async (req, res) => {
 const adicionarComentario = async (req, res) => {
   try {
     const { texto } = req.body;
+    log('📝', 'Adicionando comentário:', texto.substring(0, 50) + '...');
 
     if (!texto) {
       return res.status(400).json({ erro: 'Texto do comentário é obrigatório.' });
@@ -62,15 +85,48 @@ const adicionarComentario = async (req, res) => {
       return res.status(404).json({ erro: 'Chat não encontrado.' });
     }
 
-    chat.comentarios.push({
+    // Verificar moderação
+    log('📝', 'Chamando verificarModeracaoOpenAI...');
+    const resultadoModeracao = await verificarModeracaoOpenAI(texto);
+    log('✅', 'Moderação verificada:', resultadoModeracao);
+
+    // Adicionar comentário
+    const novoComentario = {
       usuario: req.userId,
       texto,
       enviadoEm: new Date(),
-    });
+      moderado: resultadoModeracao.flagged,
+      motivoSinalizacao: resultadoModeracao.motivo,
+      categoriasInfracoes: resultadoModeracao.categorias || [],
+    };
 
+    chat.comentarios.push(novoComentario);
     await chat.save();
 
+    // Obter o ID do comentário recém-adicionado
+    const comentarioAdicionado = chat.comentarios[chat.comentarios.length - 1];
+
+    // Se foi sinalizado, criar denúncia automática
+    if (resultadoModeracao.flagged) {
+      await registrarDenunciaModeracao(
+        chat._id,
+        comentarioAdicionado._id,
+        texto,
+        resultadoModeracao.motivo,
+        resultadoModeracao.categorias
+      );
+    }
+
     const chatAtualizado = await Chat.findById(req.params.id).populate('comentarios.usuario', 'nome_usuario');
+
+    // Se foi sinalizado, avisar o cliente
+    if (resultadoModeracao.flagged) {
+      return res.status(202).json({
+        mensagem: 'Comentário adicionado, mas foi sinalizado para revisão por conteúdo inapropriado.',
+        aviso: resultadoModeracao.motivo,
+        chat: chatAtualizado,
+      });
+    }
 
     return res.status(200).json({
       mensagem: 'Comentário adicionado com sucesso!',
@@ -112,10 +168,117 @@ const deletarComentario = async (req, res) => {
   }
 };
 
+const buscarComentariosSinalizados = async (req, res) => {
+  try {
+    // Apenas admin
+    const chats = await Chat.find({
+      'comentarios.moderado': true,
+    }).populate('comentarios.usuario', 'nome_usuario email');
+
+    const comentariosSinalizados = [];
+
+    chats.forEach((chat) => {
+      chat.comentarios.forEach((comentario) => {
+        if (comentario.moderado) {
+          comentariosSinalizados.push({
+            chatId: chat._id,
+            chatTema: chat.tema,
+            comentarioId: comentario._id,
+            usuario: comentario.usuario,
+            texto: comentario.texto,
+            enviadoEm: comentario.enviadoEm,
+            motivoSinalizacao: comentario.motivoSinalizacao,
+            categoriasInfracoes: comentario.categoriasInfracoes,
+          });
+        }
+      });
+    });
+
+    // Ordenar por data (mais recentes primeiro)
+    comentariosSinalizados.sort((a, b) => new Date(b.enviadoEm) - new Date(a.enviadoEm));
+
+    return res.status(200).json({
+      total: comentariosSinalizados.length,
+      comentarios: comentariosSinalizados,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao buscar comentários sinalizados.' });
+  }
+};
+
+const aprovarComentario = async (req, res) => {
+  try {
+    const { chatId, comentarioId } = req.params;
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({ erro: 'Chat não encontrado.' });
+    }
+
+    const comentario = chat.comentarios.id(comentarioId);
+
+    if (!comentario) {
+      return res.status(404).json({ erro: 'Comentário não encontrado.' });
+    }
+
+    // Remover sinalização
+    comentario.moderado = false;
+    comentario.motivoSinalizacao = null;
+    comentario.categoriasInfracoes = [];
+
+    await chat.save();
+
+    return res.status(200).json({
+      mensagem: 'Comentário aprovado!',
+      comentario,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao aprovar comentário.' });
+  }
+};
+
+const rejeitar = async (req, res) => {
+  try {
+    const { chatId, comentarioId } = req.params;
+    const { motivo } = req.body;
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({ erro: 'Chat não encontrado.' });
+    }
+
+    const comentario = chat.comentarios.id(comentarioId);
+
+    if (!comentario) {
+      return res.status(404).json({ erro: 'Comentário não encontrado.' });
+    }
+
+    // Deletar comentário
+    comentario.deleteOne();
+    await chat.save();
+
+    console.log(`✅ Comentário deletado por admin. Motivo: ${motivo || 'Conteúdo inapropriado'}`);
+
+    return res.status(200).json({
+      mensagem: 'Comentário removido com sucesso!',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao rejeitar comentário.' });
+  }
+};
+
 module.exports = {
   buscarTodos,
   buscarPorId,
   criarChat,
   adicionarComentario,
   deletarComentario,
+  buscarComentariosSinalizados,
+  aprovarComentario,
+  rejeitar,
 };

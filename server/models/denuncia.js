@@ -8,6 +8,8 @@ const denunciaSchema = new mongoose.Schema({
   acaoMensagem: { type: String, enum: ['Pendente', 'Mantida', 'Removida'], default: 'Pendente' },
   chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat' },
   comentarioId: { type: mongoose.Schema.Types.ObjectId },
+  tipo: { type: String, enum: ['usuario', 'moderador'], default: 'usuario' },
+  categoriasInfracoes: [String],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Denuncia', denunciaSchema);

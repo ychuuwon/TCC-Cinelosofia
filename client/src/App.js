@@ -8,6 +8,8 @@ import ChatButton from './components/ChatButton';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import EncontroDetalhes from './pages/EncontroDetalhes';
 import Acervos from './pages/Acervos';
 import FilmesEncontros from './pages/FilmesEncontros';
@@ -59,6 +61,8 @@ export default function App() {
           />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route
             path="/encontros/:id"
             element={(
