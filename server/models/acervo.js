@@ -52,6 +52,6 @@ const acervoSchema = new mongoose.Schema({
   link_video: {
     type: String,
   },
-}, { timestamps: true });
+}, { timestamps: true, collection: 'acervo_curtas' });
 
 module.exports = mongoose.model('Acervo', acervoSchema);

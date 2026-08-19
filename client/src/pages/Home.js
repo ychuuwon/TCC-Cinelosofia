@@ -21,8 +21,12 @@ export default function Home() {
 
     const atualizarQuandoSalvar = () => carregarEncontro();
     window.addEventListener('encontro-atualizado', atualizarQuandoSalvar);
+    window.addEventListener('enquete-atualizada', atualizarQuandoSalvar);
 
-    return () => window.removeEventListener('encontro-atualizado', atualizarQuandoSalvar);
+    return () => {
+      window.removeEventListener('encontro-atualizado', atualizarQuandoSalvar);
+      window.removeEventListener('enquete-atualizada', atualizarQuandoSalvar);
+    };
   }, []);
 
   return (

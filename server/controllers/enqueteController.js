@@ -14,19 +14,24 @@ const buscarTodos = async (req, res) => {
 
 const buscarAtivo = async (req, res) => {
   try {
-    // If there's an active encontro with destaque, prefer the encontro
-    // — signal the frontend to show the encontro by returning an empty object.
     const encontroAtivo = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
-    if (encontroAtivo) return res.status(200).json({});
+    const enqueteAtual = await Enquete.findOne({ destaque: true }).sort({ createdAt: -1 });
 
-    // first try to find an open enquete
-    let ativa = await Enquete.findOne({ isOpen: true }).sort({ createdAt: -1 });
-    if (ativa) return res.status(200).json(ativa);
+    if (enqueteAtual) {
+      return res.status(200).json(enqueteAtual);
+    }
 
-    // if none open, return the most recent enquete (closed) so frontend
-    // can still display results to users
-    const ultima = await Enquete.findOne().sort({ createdAt: -1 });
-    return res.status(200).json(ultima || {});
+    if (encontroAtivo) {
+      return res.status(200).json({});
+    }
+
+    const enqueteAberta = await Enquete.findOne({ isOpen: true }).sort({ createdAt: -1 });
+    if (enqueteAberta) {
+      return res.status(200).json(enqueteAberta);
+    }
+
+    const ultimaEnquete = await Enquete.findOne().sort({ createdAt: -1 });
+    return res.status(200).json(ultimaEnquete || {});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao carregar enquete ativa.' });
@@ -51,7 +56,11 @@ const criarEnquete = async (req, res) => {
       return res.status(400).json({ erro: 'Título e ao menos uma opção são obrigatórios.' });
     }
 
-    const nova = await Enquete.create({ titulo, options, isOpen: false, votes: [] });
+    await Encontro.updateMany({ destaque: true }, { $set: { destaque: false, presencas: [] } });
+    await Enquete.updateMany({ destaque: true }, { $set: { destaque: false } });
+
+    const nova = await Enquete.create({ titulo, options, isOpen: false, destaque: true, votes: [] });
+
     return res.status(201).json({ mensagem: 'Enquete criada.', enquete: nova });
   } catch (error) {
     console.error(error);
@@ -67,7 +76,11 @@ const abrirFechar = async (req, res) => {
     if (!enquete) return res.status(404).json({ erro: 'Enquete não encontrada.' });
 
     enquete.isOpen = Boolean(isOpen);
+    enquete.destaque = true;
+    await Encontro.updateMany({ destaque: true }, { $set: { destaque: false, presencas: [] } });
+    await Enquete.updateMany({ _id: { $ne: id } }, { $set: { destaque: false } });
     await enquete.save();
+
     return res.status(200).json({ mensagem: `Enquete ${enquete.isOpen ? 'aberta' : 'fechada'}.`, enquete });
   } catch (error) {
     console.error(error);

@@ -1,4 +1,5 @@
 const Encontro = require('../models/encontro');
+const Enquete = require('../models/enquete');
 const Usuario = require('../models/User');
 const { uploadToCloudinary } = require('../utils/cloudinary');
 
@@ -14,11 +15,12 @@ const buscarTodos = async (req, res) => {
 
 const buscarProximo = async (req, res) => {
   try {
-    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
+    const enqueteAtiva = await Enquete.findOne({ destaque: true }).sort({ createdAt: -1 });
+    if (enqueteAtiva) {
+      return res.status(200).json({});
+    }
 
-    // Retorna apenas quando houver um encontro com `destaque: true`.
-    // Não retornar o encontro mais recente por padrão evita exibir encontros
-    // que já foram movidos para o acervo/registro.
+    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
     return res.status(200).json(encontroAtual || {});
   } catch (error) {
     console.error(error);
@@ -28,11 +30,12 @@ const buscarProximo = async (req, res) => {
 
 const buscarAtivo = async (req, res) => {
   try {
-    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
+    const enqueteAtiva = await Enquete.findOne({ destaque: true }).sort({ createdAt: -1 });
+    if (enqueteAtiva) {
+      return res.status(200).json({});
+    }
 
-    // Retornar apenas quando houver um encontro com `destaque: true`.
-    // Isso garante que, se um encontro foi publicado no acervo/registro
-    // e não possui mais `destaque`, ele não seja exibido como ativo.
+    const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
     return res.status(200).json(encontroAtual || {});
   } catch (error) {
     console.error(error);
@@ -70,6 +73,7 @@ const criarEncontro = async (req, res) => {
     }
 
     await Encontro.updateMany({ destaque: true }, { $set: { destaque: false, presencas: [] } });
+    await Enquete.updateMany({ destaque: true }, { $set: { destaque: false } });
 
     const novoEncontro = await Encontro.create({
       tema,
@@ -115,6 +119,7 @@ const atualizarEncontro = async (req, res) => {
     }
 
     await Encontro.updateMany({ _id: { $ne: req.params.id } }, { $set: { destaque: false } });
+    await Enquete.updateMany({ destaque: true }, { $set: { destaque: false } });
 
     const updateFields = {
       tema,
@@ -169,6 +174,7 @@ const salvarAtivo = async (req, res) => {
 
     const encontroAtual = await Encontro.findOne({ destaque: true }).sort({ createdAt: -1 });
     await Encontro.updateMany({ destaque: true }, { $set: { destaque: false, presencas: [] } });
+    await Enquete.updateMany({ destaque: true }, { $set: { destaque: false } });
 
     if (encontroAtual) {
       const encontroAtualizado = await Encontro.findByIdAndUpdate(

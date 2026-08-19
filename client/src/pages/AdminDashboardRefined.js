@@ -459,6 +459,8 @@ export default function AdminDashboard() {
         setMensagemEnquete('Enquete criada com sucesso. Abra-a quando quiser aceitar votos.');
         setNovoEnquete({ titulo: '', options: [{ titulo: '', sinopse: '', capa: '' }] });
         await carregarEnquetes();
+        try { window.dispatchEvent(new Event('enquete-atualizada')); } catch (e) {}
+        try { window.dispatchEvent(new Event('encontro-atualizado')); } catch (e) {}
       } catch (err) {
         setMensagemEnquete(err.message || 'Erro ao criar enquete.');
       } finally { setSalvandoEnquete(false); }
@@ -473,6 +475,7 @@ export default function AdminDashboard() {
       if (!resp.ok) throw new Error(data.erro || data.mensagem || 'Erro ao atualizar enquete.');
       await carregarEnquetes();
       try { window.dispatchEvent(new Event('enquete-atualizada')); } catch (e) {}
+      try { window.dispatchEvent(new Event('encontro-atualizado')); } catch (e) {}
     } catch (err) { alert(err.message || 'Erro'); }
   };
 

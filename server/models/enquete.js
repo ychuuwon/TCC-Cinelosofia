@@ -16,6 +16,7 @@ const enqueteSchema = new mongoose.Schema({
   titulo: { type: String, required: true, trim: true },
   options: { type: [optionSchema], default: [] },
   isOpen: { type: Boolean, default: false },
+  destaque: { type: Boolean, default: false },
   votes: { type: [voteSchema], default: [] },
 }, { timestamps: true });
 
