@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react';
 const API_BASE = 'http://localhost:7777/api';
 
 const MENU_ITEMS = [
-  { id: 'encontros', label: 'Próximos encontros', description: 'Edite o encontro que aparece na home' },
-  { id: 'enquetes', label: 'Enquetes', description: 'Publique enquetes que aparecem na home enquanto não houver encontro ativo' },
-  { id: 'presencas', label: 'Presenças', description: 'Acompanhe os alunos que confirmaram presença' },
-  { id: 'registros', label: 'Registros de encontros', description: 'Publique registros a partir de encontros já cadastrados' },
-  { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas' },
-  { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do carrossel (home / login / register)' },
-  { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas publicados no acervo' },
+  { id: 'encontros', label: 'Próximos encontros', description: 'Edite o encontro que aparece na home', emoji: '🎬' },
+  { id: 'enquetes', label: 'Enquetes', description: 'Publique enquetes para votação', emoji: '📊' },
+  { id: 'presencas', label: 'Presenças', description: 'Acompanhe os alunos confirmados', emoji: '✅' },
+  { id: 'registros', label: 'Registros de encontros', description: 'Publique registros dos encontros', emoji: '📝' },
+  { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas', emoji: '⚑' },
+  { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do portal', emoji: '🖼️' },
+  { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas', emoji: '🎞️' },
 ];
 
 const defaultState = {
@@ -139,7 +139,7 @@ function formatarData(valor) {
 }
 
 export default function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState('encontros');
+  const [activeSection, setActiveSection] = useState(null);
   const [state, setState] = useState(readStoredState);
   const [currentEncontroId, setCurrentEncontroId] = useState(null);
   const [mensagemAdmin, setMensagemAdmin] = useState('');
@@ -986,22 +986,22 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section className="admin-shell">
-        <aside className="admin-sidebar">
+      {!activeSection ? (
+        <section className="admin-home-grid" aria-label="Funcionalidades administrativas">
           {MENU_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`admin-nav-button ${activeSection === item.id ? 'active' : ''}`}
-              onClick={() => setActiveSection(item.id)}
-            >
+            <button key={item.id} type="button" className="admin-feature-card" onClick={() => setActiveSection(item.id)}>
+              <span className="admin-feature-emoji" aria-hidden="true">{item.emoji}</span>
               <strong>{item.label}</strong>
               <span>{item.description}</span>
             </button>
           ))}
-        </aside>
-
-        <div className="admin-content">
+        </section>
+      ) : (
+        <section className="admin-shell">
+          <div className="admin-content">
+            <button type="button" className="admin-back-button" onClick={() => setActiveSection(null)}>
+              ← Retornar
+            </button>
           
 
           {activeSection === 'encontros' && (
@@ -1594,8 +1594,9 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
     </main>
   );
 }
