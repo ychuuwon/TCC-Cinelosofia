@@ -13,14 +13,14 @@ const {
   rejeitar,
 } = require('../controllers/chatController');
 
-// Rotas públicas
-router.get('/', buscarTodos);
-router.get('/:id', buscarPorId);
-
 // Rotas autenticadas
 router.post('/', authMiddleware, criarChat);
 router.post('/:id/comentarios', authMiddleware, adicionarComentario);
 router.delete('/:chatId/comentarios/:comentarioId', authMiddleware, deletarComentario);
+
+// Rotas públicas
+router.get('/', buscarTodos);
+router.get('/:id', buscarPorId);
 
 // Rotas de moderação (apenas admin)
 router.get('/admin/sinalizados', authMiddleware, adminMiddleware, buscarComentariosSinalizados);

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const denunciaSchema = new mongoose.Schema({
   autor: { type: String, trim: true },
+  denunciante: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' },
   mensagem: { type: String, required: true, trim: true },
   motivo: { type: String, trim: true },
   status: { type: String, enum: ['Pendente', 'Revisada'], default: 'Pendente' },

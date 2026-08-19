@@ -6,30 +6,31 @@ function getStoredToken() {
   return localStorage.getItem('token');
 }
 
-function getReportsStorageKey(userId) {
-  return userId ? `chat_denuncias_${userId}` : null;
-}
-
-function getStoredReports(userId) {
-  if (!userId) {
+async function sincronizarDenunciasUsuario(userId) {
+  const token = getStoredToken();
+  if (!userId || !token) {
     return [];
   }
 
   try {
-    const raw = localStorage.getItem(getReportsStorageKey(userId));
-    return raw ? JSON.parse(raw) : [];
+    const response = await fetch('http://localhost:7777/api/denuncias/minhas', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const denuncias = await response.json();
+    const denunciasPendentes = new Set(
+      denuncias
+        .filter((denuncia) => denuncia.status === 'Pendente' && denuncia.acaoMensagem === 'Pendente')
+        .map((denuncia) => String(denuncia.comentarioId))
+    );
+    return Array.from(denunciasPendentes);
   } catch (error) {
-    return [];
+    return null;
   }
-}
-
-function saveStoredReports(userId, reports) {
-  const storageKey = getReportsStorageKey(userId);
-  if (!storageKey) {
-    return;
-  }
-
-  localStorage.setItem(storageKey, JSON.stringify(reports));
 }
 
 export default function Chat() {
@@ -40,14 +41,32 @@ export default function Chat() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
+  const [mostrarAvisoOfensivo, setMostrarAvisoOfensivo] = useState(false);
   const [encontroAtual, setEncontroAtual] = useState('');
   const messagesEndRef = useRef(null);
   const usuarioAtual = getStoredUser();
   const usuarioAtualId = usuarioAtual?._id || usuarioAtual?.id || null;
-  const [reportedIds, setReportedIds] = useState(() => getStoredReports(usuarioAtualId));
+  const [reportedIds, setReportedIds] = useState([]);
 
   useEffect(() => {
-    setReportedIds(getStoredReports(usuarioAtualId));
+    let ativo = true;
+
+    const atualizarDenuncias = async () => {
+      const denunciasPendentes = await sincronizarDenunciasUsuario(usuarioAtualId);
+      if (ativo && denunciasPendentes) {
+        setReportedIds(denunciasPendentes);
+      }
+    };
+
+    atualizarDenuncias();
+    const intervalo = window.setInterval(atualizarDenuncias, 5000);
+    window.addEventListener('focus', atualizarDenuncias);
+
+    return () => {
+      ativo = false;
+      window.clearInterval(intervalo);
+      window.removeEventListener('focus', atualizarDenuncias);
+    };
   }, [usuarioAtualId]);
 
   const carregarEncontroAtual = async () => {
@@ -153,6 +172,11 @@ export default function Chat() {
       });
 
       const payload = await response.json().catch(() => ({}));
+      if (response.status === 422) {
+        setMostrarAvisoOfensivo(true);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(payload.erro || payload.mensagem || 'Não foi possível enviar a mensagem.');
       }
@@ -186,7 +210,6 @@ export default function Chat() {
 
     const nextReports = [...new Set([...reportedIds, comentarioId])];
     setReportedIds(nextReports);
-    saveStoredReports(usuarioAtualId, nextReports);
     setSucesso('Mensagem denunciada. A equipe será notificada.');
     // enviar denúncia ao servidor
     try {
@@ -201,7 +224,10 @@ export default function Chat() {
 
       fetch('http://localhost:7777/api/denuncias', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getStoredToken()}`,
+        },
         body: JSON.stringify(payload),
       }).then(() => {
         try { localStorage.setItem('nova_denuncia', JSON.stringify({ ts: Date.now() })); } catch (e) {}
@@ -296,6 +322,16 @@ export default function Chat() {
           </>
         )}
       </section>
+      {mostrarAvisoOfensivo && (
+        <div className="chat-warning-overlay" role="presentation">
+          <div className="chat-warning-modal" role="dialog" aria-modal="true" aria-labelledby="chat-warning-title">
+            <p id="chat-warning-title">Sua mensagem apresenta conteúdo ofensivo, repense :)</p>
+            <button type="button" className="btn-primary" onClick={() => setMostrarAvisoOfensivo(false)}>
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

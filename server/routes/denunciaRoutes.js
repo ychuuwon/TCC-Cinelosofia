@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
-const { listarDenuncias, criarDenuncia, deletarDenuncia, atualizarStatus, atualizarAcaoMensagem } = require('../controllers/denunciaController');
+const { listarDenuncias, listarMinhasDenuncias, criarDenuncia, deletarDenuncia, atualizarStatus, atualizarAcaoMensagem } = require('../controllers/denunciaController');
 
-// Public: criar denúncia
-router.post('/', criarDenuncia);
+// Usuários autenticados podem criar e consultar suas denúncias
+router.post('/', authMiddleware, criarDenuncia);
+router.get('/minhas', authMiddleware, listarMinhasDenuncias);
 
 // Admin: listar, deletar, atualizar
 router.get('/', authMiddleware, adminMiddleware, listarDenuncias);

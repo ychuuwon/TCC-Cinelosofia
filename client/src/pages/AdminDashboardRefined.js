@@ -165,7 +165,7 @@ export default function AdminDashboard() {
   const [registrosEncontros, setRegistrosEncontros] = useState([]);
   const [enquetes, setEnquetes] = useState([]);
   const [loadingEnquetes, setLoadingEnquetes] = useState(false);
-  const [novoEnquete, setNovoEnquete] = useState({ titulo: '', options: [{ titulo: '', sinopse: '', capa: '' }] });
+  const [novoEnquete, setNovoEnquete] = useState({ titulo: '', options: [{ titulo: '', sinopse: '', genero: '', capa: '' }] });
   const [salvandoEnquete, setSalvandoEnquete] = useState(false);
   const [mensagemEnquete, setMensagemEnquete] = useState('');
   const [novoRegistroEncontro, setNovoRegistroEncontro] = useState(emptyRegistroEncontro);
@@ -407,7 +407,7 @@ export default function AdminDashboard() {
   };
 
   const handleAddOption = () => {
-    setNovoEnquete((prev) => ({ ...prev, options: [...(prev.options || []), { titulo: '', sinopse: '', capa: '' }] }));
+    setNovoEnquete((prev) => ({ ...prev, options: [...(prev.options || []), { titulo: '', sinopse: '', genero: '', capa: '' }] }));
   };
 
   const handleRemoveOption = (index) => {
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
         }
 
         setMensagemEnquete('Enquete criada com sucesso. Abra-a quando quiser aceitar votos.');
-        setNovoEnquete({ titulo: '', options: [{ titulo: '', sinopse: '', capa: '' }] });
+        setNovoEnquete({ titulo: '', options: [{ titulo: '', sinopse: '', genero: '', capa: '' }] });
         await carregarEnquetes();
         try { window.dispatchEvent(new Event('enquete-atualizada')); } catch (e) {}
         try { window.dispatchEvent(new Event('encontro-atualizado')); } catch (e) {}
@@ -725,17 +725,17 @@ export default function AdminDashboard() {
 
   const carregarCarouselSlot = async (slot) => {
     try {
-      const url = `${API_BASE}/carousel?slot=${slot}`;
-      const res = await fetch(url);
-      if (!res.ok) {
+      const response = await fetch(`${API_BASE}/carousel?slot=${slot}`);
+      if (!response.ok) {
         if (slot === 'home') setCarouselItemsHome([]);
         else setCarouselItemsAuth([]);
         return;
       }
-      const data = await res.json();
+
+      const data = await response.json();
       if (slot === 'home') setCarouselItemsHome(data);
       else setCarouselItemsAuth(data);
-    } catch (err) {
+    } catch (error) {
       if (slot === 'home') setCarouselItemsHome([]);
       else setCarouselItemsAuth([]);
     }
@@ -759,25 +759,37 @@ export default function AdminDashboard() {
       const form = new FormData();
       form.append('slot', slot === 'home' ? 'home' : 'auth');
       form.append('image', file);
-      const res = await fetch(`${API_BASE}/carousel`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.erro || 'Erro ao enviar imagem');
-      if (slot === 'home') setCarouselHomeFile(null); else setCarouselAuthFile(null);
+      const response = await fetch(`${API_BASE}/carousel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.erro || 'Erro ao enviar imagem');
+      if (slot === 'home') setCarouselHomeFile(null);
+      else setCarouselAuthFile(null);
       await carregarCarouselSlot(slot);
       alert('Imagem adicionada');
-    } catch (err) {
-      alert(err.message || 'Erro');
-    } finally { setLoading(false); }
+    } catch (error) {
+      alert(error.message || 'Erro');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteCarousel = async (id, slot) => {
     if (!window.confirm('Remover imagem do carrossel?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/carousel/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) throw new Error('Erro ao remover');
+      const response = await fetch(`${API_BASE}/carousel/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Erro ao remover');
       await carregarCarouselSlot(slot);
-    } catch (err) { alert(err.message || 'Erro'); }
+    } catch (error) {
+      alert(error.message || 'Erro');
+    }
   };
 
   const handleSalvarRegistroEncontro = async (event) => {
@@ -1368,7 +1380,7 @@ export default function AdminDashboard() {
               <form className="admin-form admin-form-grid enquetes-form" onSubmit={handleSalvarEnquete}>
 
                 <div className="admin-field admin-field-full">
-                  <label>Opções (título, sinopse, capa pequena)</label>
+                  <label>Opções (título, sinopse, gênero, capa pequena)</label>
                   {Array.isArray(novoEnquete.options) && novoEnquete.options.map((opt, idx) => (
                     <div key={idx} className="admin-option-row">
                       <input
@@ -1384,6 +1396,13 @@ export default function AdminDashboard() {
                         placeholder="Breve sinopse"
                         value={opt.sinopse}
                         onChange={(e) => setNovoEnquete((prev) => { const copy = { ...prev }; copy.options = copy.options.slice(); copy.options[idx] = { ...copy.options[idx], sinopse: e.target.value }; return copy; })}
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Gênero do filme"
+                        value={opt.genero || ''}
+                        onChange={(e) => setNovoEnquete((prev) => { const copy = { ...prev }; copy.options = copy.options.slice(); copy.options[idx] = { ...copy.options[idx], genero: e.target.value }; return copy; })}
                       />
 
                       <div className="admin-option-row-controls">

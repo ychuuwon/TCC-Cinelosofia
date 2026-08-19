@@ -18,6 +18,19 @@ const listarDenuncias = async (req, res) => {
   }
 };
 
+const listarMinhasDenuncias = async (req, res) => {
+  try {
+    const denuncias = await Denuncia.find({ denunciante: req.userId })
+      .select('comentarioId status acaoMensagem')
+      .lean();
+
+    return res.status(200).json(denuncias);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao listar suas denúncias.' });
+  }
+};
+
 const criarDenuncia = async (req, res) => {
   try {
     const { autor, mensagem, motivo, chatId, comentarioId } = req.body;
@@ -28,6 +41,7 @@ const criarDenuncia = async (req, res) => {
 
     const nova = await Denuncia.create({
       autor,
+      denunciante: req.userId,
       mensagem: String(mensagem).trim(),
       motivo,
       chatId: chatId || undefined,
@@ -101,6 +115,9 @@ const atualizarAcaoMensagem = async (req, res) => {
     }
 
     denuncia.acaoMensagem = acao;
+    if (acao !== 'Pendente') {
+      denuncia.status = 'Revisada';
+    }
     await denuncia.save();
 
     return res.status(200).json(denuncia);
@@ -112,6 +129,7 @@ const atualizarAcaoMensagem = async (req, res) => {
 
 module.exports = {
   listarDenuncias,
+  listarMinhasDenuncias,
   criarDenuncia,
   deletarDenuncia,
   atualizarStatus,

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const optionSchema = new mongoose.Schema({
   titulo: { type: String, required: true, trim: true },
   sinopse: { type: String, default: '' },
+  genero: { type: String, default: '', trim: true },
   capa: { type: String, default: '' },
 });
 

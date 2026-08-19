@@ -3,6 +3,27 @@ const Denuncia = require('../models/denuncia');
 const { verificarModeracaoOpenAI } = require('../utils/moderacao');
 const { log } = require('../utils/logger');
 
+const PALAVRAS_BANIDAS = [
+  'puta', 'vagabunda', 'vai se fuder', 'vai se foder', 'arrombada',
+  'cuzona', 'cuzão', 'filha da puta', 'filho da puta', 'pau no cu',
+  'desgraçada', 'desgraçado', 'buceta', 'porra', 'piroca', 'xereca',
+  'bucetuda', 'vadia', 'cadela', 'cachorra', 'prostituta', 'caralho',
+];
+
+const normalizarTexto = (texto) => String(texto)
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase();
+
+const contemPalavraBanida = async (texto) => {
+  const textoNormalizado = normalizarTexto(texto);
+
+  return PALAVRAS_BANIDAS.some((palavra) => {
+    const palavraNormalizada = normalizarTexto(palavra).trim();
+    return palavraNormalizada && textoNormalizado.includes(palavraNormalizada);
+  });
+};
+
 // Função auxiliar para registrar denúncia automática
 const registrarDenunciaModeracao = async (chatId, comentarioId, texto, motivoSinalizacao, categoriasInfracoes) => {
   try {
@@ -73,10 +94,15 @@ const criarChat = async (req, res) => {
 const adicionarComentario = async (req, res) => {
   try {
     const { texto } = req.body;
-    log('📝', 'Adicionando comentário:', texto.substring(0, 50) + '...');
 
     if (!texto) {
       return res.status(400).json({ erro: 'Texto do comentário é obrigatório.' });
+    }
+
+    log('📝', 'Adicionando comentário:', texto.substring(0, 50) + '...');
+
+    if (await contemPalavraBanida(texto)) {
+      return res.status(422).json({ erro: 'Sua mensagem apresenta conteúdo ofensivo, repense :)' });
     }
 
     const chat = await Chat.findById(req.params.id);

@@ -146,6 +146,7 @@ export default function Poll({ compact = false }) {
             <div className="poll-option-body">
               <strong>{opt.titulo}</strong>
               <p>{opt.sinopse}</p>
+              {opt.genero && <span className="poll-option-genre">Gênero: {opt.genero}</span>}
               <div className="poll-meta">
                 {/* sempre mostrar resultados para todos os usuários (contagem + barra) */}
                 <>
