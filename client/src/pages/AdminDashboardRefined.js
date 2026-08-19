@@ -1300,8 +1300,8 @@ export default function AdminDashboard() {
                   <label>Adicionar imagem para a Home</label>
                   <span className="admin-field-help">Aparece ao lado do título na página inicial.</span>
                   <input type="file" accept="image/*" onChange={(e) => setCarouselHomeFile(e.target.files?.[0] || null)} />
-                  <div style={{ marginTop: 8 }}>
-                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
+                  <div className="carousel-upload-action">
+                    <button type="button" className="btn-primary carousel-upload-button" onClick={() => handleSalvarCarouselSlot('home', carouselHomeFile)} disabled={loadingCarouselHome}>{loadingCarouselHome ? 'Enviando...' : 'Enviar para Home'}</button>
                   </div>
                 </div>
 
@@ -1309,8 +1309,8 @@ export default function AdminDashboard() {
                   <label>Adicionar imagem para Login / Cadastro</label>
                   <span className="admin-field-help">Visual usado nas páginas de autenticação.</span>
                   <input type="file" accept="image/*" onChange={(e) => setCarouselAuthFile(e.target.files?.[0] || null)} />
-                  <div style={{ marginTop: 8 }}>
-                    <button type="button" className="btn-primary" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
+                  <div className="carousel-upload-action">
+                    <button type="button" className="btn-primary carousel-upload-button" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
                   </div>
                 </div>
               </div>

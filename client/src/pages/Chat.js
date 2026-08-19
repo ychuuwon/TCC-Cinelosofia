@@ -198,6 +198,34 @@ export default function Chat() {
     }
   };
 
+  const handleExcluirMensagem = async (comentarioId) => {
+    if (!chat?._id || !comentarioId) {
+      return;
+    }
+
+    const confirmar = window.confirm('Tem certeza que deseja apagar sua mensagem?');
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:7777/api/chat/${chat._id}/comentarios/${comentarioId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getStoredToken()}` },
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.erro || payload.mensagem || 'Não foi possível apagar a mensagem.');
+      }
+
+      setSucesso('Mensagem apagada com sucesso.');
+      await carregarChat();
+    } catch (error) {
+      setErro(error.message || 'Erro ao apagar a mensagem.');
+    }
+  };
+
   const handleDenunciar = (comentarioId) => {
     if (!comentarioId) {
       return;
@@ -283,16 +311,29 @@ export default function Chat() {
                             })}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          className="btn-denunciar"
-                          onClick={() => handleDenunciar(comentario._id)}
-                          disabled={reportedIds.includes(comentario._id)}
-                          title="Denunciar mensagem"
-                          aria-label="Denunciar mensagem"
-                        >
-                          {!reportedIds.includes(comentario._id) ? '⚑' : '✓'}
-                        </button>
+                        <div className="chat-message-actions">
+                          <button
+                            type="button"
+                            className="btn-denunciar"
+                            onClick={() => handleDenunciar(comentario._id)}
+                            disabled={reportedIds.includes(comentario._id)}
+                            title="Denunciar mensagem"
+                            aria-label="Denunciar mensagem"
+                          >
+                            {!reportedIds.includes(comentario._id) ? '⚑' : '✓'}
+                          </button>
+                          {isCurrentUser && (
+                            <button
+                              type="button"
+                              className="btn-excluir-mensagem"
+                              onClick={() => handleExcluirMensagem(comentario._id)}
+                              title="Apagar sua mensagem"
+                              aria-label="Apagar sua mensagem"
+                            >
+                              x
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <p>{comentario.texto}</p>
                     </article>
