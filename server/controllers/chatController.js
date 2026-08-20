@@ -7,7 +7,9 @@ const PALAVRAS_BANIDAS = [
   'puta', 'vagabunda', 'vai se fuder', 'vai se foder', 'arrombada',
   'cuzona', 'cuzão', 'filha da puta', 'filho da puta', 'pau no cu',
   'desgraçada', 'desgraçado', 'buceta', 'porra', 'piroca', 'xereca',
-  'bucetuda', 'vadia', 'cadela', 'cachorra', 'prostituta', 'caralho',
+  'bucetuda', 'vadia', 'cadela', 'cachorra', 'prostituta', 'caralho', 
+  'vsf', 'vsfd', 'cu', 'fodido', 'fudido', 'retardado', 'viado', 'nigga', 
+  'nigger', 'v4di4', 'put4' 
 ];
 
 const normalizarTexto = (texto) => String(texto)
