@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import API_BASE from '../config';
 
 export default function ImageCarousel({ images = [], slot = null, interval = 3500, className = '' }) {
   const [index, setIndex] = useState(0);
@@ -10,7 +11,7 @@ export default function ImageCarousel({ images = [], slot = null, interval = 350
       if (!slot) return;
       try {
         const token = localStorage.getItem('token');
-        const url = `http://localhost:7777/api/carousel${slot ? `?slot=${slot}` : ''}`;
+        const url = `${API_BASE}/carousel${slot ? `?slot=${slot}` : ''}`;
         const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
         if (res.ok) {
           const data = await res.json();

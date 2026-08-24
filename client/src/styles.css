@@ -414,7 +414,7 @@ a {
 .image-stack {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
   gap: 12px;
   padding: 20px;
   background: var(--paper);
@@ -432,11 +432,25 @@ a {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
-.image-stack img {
-  border-radius: 12px;
+.image-stack .who-image-frame {
+  min-width: 0;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-stack .who-image-frame img {
+  display: block;
+  box-sizing: border-box;
+  padding: 0;
+  max-width: 100%;
+  max-height: 100%;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(169, 31, 26, 0.18);
+  object-fit: contain;
 }
 
 .text-panel,

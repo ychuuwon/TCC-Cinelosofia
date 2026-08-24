@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredUser } from '../auth';
+import API_BASE from '../config';
 
 function getStoredToken() {
   return localStorage.getItem('token');
@@ -13,7 +14,7 @@ async function sincronizarDenunciasUsuario(userId) {
   }
 
   try {
-    const response = await fetch('http://localhost:7777/api/denuncias/minhas', {
+    const response = await fetch(`${API_BASE}/denuncias/minhas`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -71,7 +72,7 @@ export default function Chat() {
 
   const carregarEncontroAtual = async () => {
     try {
-      const response = await fetch('http://localhost:7777/api/encontros/proximo');
+      const response = await fetch(`${API_BASE}/encontros/proximo`);
       if (!response.ok) {
         return;
       }
@@ -88,7 +89,7 @@ export default function Chat() {
     setErro('');
 
     try {
-      const response = await fetch('http://localhost:7777/api/chat');
+      const response = await fetch(`${API_BASE}/chat`);
       if (!response.ok) {
         throw new Error('Não foi possível carregar o chat.');
       }
@@ -103,7 +104,7 @@ export default function Chat() {
           return;
         }
 
-        const criarResponse = await fetch('http://localhost:7777/api/chat', {
+        const criarResponse = await fetch(`${API_BASE}/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -162,7 +163,7 @@ export default function Chat() {
     setSucesso('');
 
     try {
-      const response = await fetch(`http://localhost:7777/api/chat/${chat?._id}/comentarios`, {
+      const response = await fetch(`${API_BASE}/chat/${chat?._id}/comentarios`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +210,7 @@ export default function Chat() {
     }
 
     try {
-      const response = await fetch(`http://localhost:7777/api/chat/${chat._id}/comentarios/${comentarioId}`, {
+      const response = await fetch(`${API_BASE}/chat/${chat._id}/comentarios/${comentarioId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${getStoredToken()}` },
       });
@@ -250,7 +251,7 @@ export default function Chat() {
         comentarioId,
       };
 
-      fetch('http://localhost:7777/api/denuncias', {
+      fetch(`${API_BASE}/denuncias`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

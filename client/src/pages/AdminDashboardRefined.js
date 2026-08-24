@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-
-const API_BASE = 'http://localhost:7777/api';
+import API_BASE from '../config';
 
 const MENU_ITEMS = [
   { id: 'encontros', label: 'Próximos encontros', description: 'Edite o encontro que aparece na home', emoji: '🎬' },
@@ -9,7 +8,7 @@ const MENU_ITEMS = [
   { id: 'registros', label: 'Registros de encontros', description: 'Publique registros dos encontros', emoji: '📝' },
   { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas', emoji: '⚑' },
   { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do portal', emoji: '🖼️' },
-  { id: 'curtas', label: 'Curta-metragens', description: 'Cadastre e gerencie os curtas', emoji: '🎞️' },
+  { id: 'curtas', label: 'Domínio Público', description: 'Cadastre e gerencie os filmes', emoji: '🎞️' },
 ];
 
 const defaultState = {
@@ -623,13 +622,13 @@ export default function AdminDashboard() {
     ];
 
     if (camposObrigatorios.some((valor) => !valor)) {
-      setMensagemCurta('Preencha todos os campos obrigatórios do curta.');
+      setMensagemCurta('Preencha todos os campos obrigatórios do filme.');
       return;
     }
 
     const token = localStorage.getItem('token');
     if (!token) {
-      setMensagemCurta('Faça login como administrador para salvar o curta.');
+      setMensagemCurta('Faça login como administrador para salvar o filme.');
       return;
     }
 
@@ -668,15 +667,15 @@ export default function AdminDashboard() {
       const responseData = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(responseData.erro || responseData.mensagem || 'Não foi possível salvar o curta.');
+        throw new Error(responseData.erro || responseData.mensagem || 'Não foi possível salvar o filme.');
       }
 
-      setMensagemCurta('Curta salvo com sucesso.');
+      setMensagemCurta('Filme salvo com sucesso.');
       setNovoCurta(emptyCurta);
       setImagemCurtaFile(null);
       await carregarCurtas();
     } catch (error) {
-      setMensagemCurta(error.message || 'Erro ao salvar curta.');
+      setMensagemCurta(error.message || 'Erro ao salvar filme.');
     } finally {
       setSalvandoCurta(false);
       setUploadingImagemCurta(false);
@@ -686,11 +685,11 @@ export default function AdminDashboard() {
   const handleRemoverCurta = async (curtaId) => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setMensagemCurta('Faça login como administrador para remover o curta.');
+      setMensagemCurta('Faça login como administrador para remover o filme.');
       return;
     }
 
-    if (!window.confirm('Remover este curta do acervo?')) {
+    if (!window.confirm('Remover este filme do acervo?')) {
       return;
     }
 
@@ -704,13 +703,13 @@ export default function AdminDashboard() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.erro || 'Não foi possível remover o curta.');
+        throw new Error(data.erro || 'Não foi possível remover o filme.');
       }
 
       await carregarCurtas();
-      setMensagemCurta('Curta removido com sucesso.');
+      setMensagemCurta('Filme removido com sucesso.');
     } catch (error) {
-      setMensagemCurta(error.message || 'Erro ao remover curta.');
+      setMensagemCurta(error.message || 'Erro ao remover filme.');
     }
   };
 
@@ -757,7 +756,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('token');
       if (!token) { alert('Faça login como administrador'); return; }
       const form = new FormData();
-      form.append('slot', slot === 'home' ? 'home' : 'auth');
+      form.append('slot', slot);
       form.append('image', file);
       const response = await fetch(`${API_BASE}/carousel`, {
         method: 'POST',
@@ -975,13 +974,20 @@ export default function AdminDashboard() {
     return typeof genero === 'string' ? genero : genero.descricao || '';
   };
 
+  const carouselPreviewItems = carouselPreviewSlot === 'home'
+    ? carouselItemsHome
+    : carouselItemsAuth;
+  const carouselPreviewLabel = carouselPreviewSlot === 'home'
+    ? 'Home'
+    : 'Login/Cadastro';
+
   return (
     <main className="admin-page">
       <section className="admin-hero">
         <div>
           <p className="eyebrow">Painel administrativo</p>
           <h1>Administre o portal Cinelosofia</h1>
-          <p>Gerencie encontros, presenças, curtas, registros de encontros e denúncias do chat a partir de um único painel.</p>
+          <p>Gerencie encontros, presenças, filmes em domínio público, registros de encontros e denúncias do chat a partir de um único painel.</p>
           
         </div>
       </section>
@@ -1193,8 +1199,8 @@ export default function AdminDashboard() {
             <div className="admin-section-card">
               <div className="admin-section-header">
                 <div>
-                  <h2>Curta-metragens</h2>
-                  <p className="auth-description">Cada curta cadastrado aparece automaticamente no acervo público com todos os seus campos.</p>
+                  <h2>Domínio Público</h2>
+                  <p className="auth-description">Cada filme cadastrado aparece automaticamente no acervo público com todos os seus campos.</p>
                 </div>
               </div>
 
@@ -1251,16 +1257,16 @@ export default function AdminDashboard() {
                   <input id="curta-link" type="url" value={novoCurta.link_video} onChange={(event) => setNovoCurta((prev) => ({ ...prev, link_video: event.target.value }))} placeholder="https://..." required />
                 </div>
                 <button type="submit" className="btn-primary" disabled={salvandoCurta || uploadingImagemCurta}>
-                  {salvandoCurta || uploadingImagemCurta ? 'Salvando...' : 'Salvar curta'}
+                  {salvandoCurta || uploadingImagemCurta ? 'Salvando...' : 'Salvar filme'}
                 </button>
               </form>
 
               {loadingCurtas ? (
-                <p className="chat-status">Carregando curtas cadastrados...</p>
+                <p className="chat-status">Carregando filmes cadastrados...</p>
               ) : (
                 <div className="admin-list">
                   {curtas.length === 0 ? (
-                    <p className="chat-status">Nenhum curta cadastrado no momento.</p>
+                    <p className="chat-status">Nenhum filme cadastrado no momento.</p>
                   ) : (
                     curtas.map((item) => (
                       <article key={item._id} className="admin-list-item admin-list-item-stack">
@@ -1313,6 +1319,7 @@ export default function AdminDashboard() {
                     <button type="button" className="btn-primary carousel-upload-button" onClick={() => handleSalvarCarouselSlot('auth', carouselAuthFile)} disabled={loadingCarouselAuth}>{loadingCarouselAuth ? 'Enviando...' : 'Enviar para Login/Cadastro'}</button>
                   </div>
                 </div>
+
               </div>
 
               <div className="admin-carousel-panel">
@@ -1328,7 +1335,7 @@ export default function AdminDashboard() {
                 <div className="admin-carousel-preview">
                   <div className="admin-carousel-preview-header">
                     <div>
-                      <h3>{carouselPreviewSlot === 'home' ? 'Imagens da Home' : 'Imagens de Login / Cadastro'}</h3>
+                      <h3>{carouselPreviewLabel}</h3>
                       <p className="admin-field-help">Clique em um botão para abrir o conjunto de imagens correspondente.</p>
                     </div>
                     <button type="button" className="btn-pill outline" onClick={() => carregarCarouselSlot(carouselPreviewSlot)}>
@@ -1337,10 +1344,10 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="admin-carousel-grid">
-                    {(carouselPreviewSlot === 'home' ? carouselItemsHome : carouselItemsAuth).length === 0 ? (
-                      <p className="chat-status">Nenhuma imagem cadastrada para {carouselPreviewSlot === 'home' ? 'Home' : 'Login/Cadastro'}.</p>
+                    {carouselPreviewItems.length === 0 ? (
+                      <p className="chat-status">Nenhuma imagem cadastrada para {carouselPreviewLabel}.</p>
                     ) : (
-                      (carouselPreviewSlot === 'home' ? carouselItemsHome : carouselItemsAuth).map((item) => (
+                      carouselPreviewItems.map((item) => (
                         <article key={item._id} className="admin-carousel-item">
                           <img src={item.url} alt={item.slot} />
                           <div className="admin-carousel-item-actions">

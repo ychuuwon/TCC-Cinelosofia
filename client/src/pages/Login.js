@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { consumeAuthMessage } from '../auth';
 import ImageCarousel from '../components/ImageCarousel';
+import API_BASE from '../config';
 
 export default function Login({ onLogin }) {
   const [identificador, setIdentificador] = useState('');
@@ -34,7 +35,7 @@ export default function Login({ onLogin }) {
       : { nome_usuario: identificador, senha: password };
 
     try {
-      const response = await fetch('http://localhost:7777/api/users/login', {
+      const response = await fetch(`${API_BASE}/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginPayload),

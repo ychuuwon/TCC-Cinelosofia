@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isAdmin } from '../auth';
-
-const API_BASE = 'http://localhost:7777/api';
+import API_BASE from '../config';
 
 function decodeTokenUserId(token) {
   try {

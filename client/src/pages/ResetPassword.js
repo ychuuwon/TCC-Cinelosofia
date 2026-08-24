@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
+import API_BASE from '../config';
 
 export default function ResetPassword() {
   const [novaSenha, setNovaSenha] = useState('');
@@ -47,7 +48,7 @@ export default function ResetPassword() {
     }
 
     try {
-      const response = await fetch('http://localhost:7777/api/users/reset-password', {
+      const response = await fetch(`${API_BASE}/users/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

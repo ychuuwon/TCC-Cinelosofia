@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import API_BASE from '../config';
 
 function renderGenero(genero) {
   if (!genero) {
@@ -8,6 +9,8 @@ function renderGenero(genero) {
   return typeof genero === 'string' ? genero : genero.descricao || '';
 }
 
+const CAPA_DOMINIO_PUBLICO = `${process.env.PUBLIC_URL}/imagens/curtas.png`;
+
 export default function Curtametragens() {
   const [curtas, setCurtas] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -15,7 +18,7 @@ export default function Curtametragens() {
   useEffect(() => {
     const carregarCurtas = async () => {
       try {
-        const response = await fetch('http://localhost:7777/api/acervos?tipo=curta');
+        const response = await fetch(`${API_BASE}/acervos?tipo=curta`);
         const data = await response.json();
         setCurtas(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -30,16 +33,16 @@ export default function Curtametragens() {
 
   return (
     <main className="collection-page collection-white-title">
-      <h1>CURTAS-METRAGENS</h1>
+      <h1>DOMÍNIO PÚBLICO</h1>
       <section className="collection-list collection-detail-list">
         {carregando ? (
-          <p className="chat-status">Carregando curtas cadastrados...</p>
+          <p className="chat-status">Carregando filmes...</p>
         ) : curtas.length === 0 ? (
           <article className="collection-detail-card collection-detail-empty">
-            <img src="/imagens/curtas.png" alt="Curta em destaque" />
+            <img src={CAPA_DOMINIO_PUBLICO} alt="Capa do acervo Domínio Público" />
             <div>
-              <h3>Nenhum curta cadastrado</h3>
-              <p>Os curtas cadastrados pelo administrador aparecerão aqui com todos os campos informados no cadastro.</p>
+              <h3>Nenhum filme cadastrado</h3>
+              <p>Os filmes cadastrados pelo administrador aparecerão aqui com todos os campos informados no cadastro.</p>
             </div>
           </article>
         ) : (
@@ -73,7 +76,7 @@ export default function Curtametragens() {
 
                 {item.link_video && (
                   <p className="collection-link-row">
-                    <strong>Vídeo:</strong> <a href={item.link_video} target="_blank" rel="noreferrer">Assistir curta</a>
+                    <strong>Vídeo:</strong> <a href={item.link_video} target="_blank" rel="noreferrer">Assistir filme</a>
                   </p>
                 )}
               </div>

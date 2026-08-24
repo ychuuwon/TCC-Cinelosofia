@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
+import API_BASE from '../config';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailEnviado, setEmailEnviado] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch('http://localhost:7777/api/users/forgot-password', {
+      const response = await fetch(`${API_BASE}/users/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

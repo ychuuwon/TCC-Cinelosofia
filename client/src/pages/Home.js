@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
 import Poll from '../components/Poll';
+import API_BASE from '../config';
+
+const QUEM_SOMOS_IMAGES = [
+  'https://res.cloudinary.com/cinelosofia/image/upload/v1787537762/cinelosofia/quemsomos1.jpeg.jpg',
+];
 
 export default function Home() {
   const [proximoEncontro, setProximoEncontro] = useState(null);
+  const [capas, setCapas] = useState({ curtas: '', encontros: '' });
 
   useEffect(() => {
     const carregarEncontro = async () => {
       try {
-        const response = await fetch('http://localhost:7777/api/encontros/proximo');
+        const response = await fetch(`${API_BASE}/encontros/proximo`);
         const data = await response.json();
         setProximoEncontro(data);
       } catch (error) {
@@ -18,6 +24,21 @@ export default function Home() {
     };
 
     carregarEncontro();
+
+    const carregarCapas = async () => {
+      try {
+        const [curtasResponse, encontrosResponse] = await Promise.all([
+          fetch(`${API_BASE}/carousel?slot=acervo-curtas`),
+          fetch(`${API_BASE}/carousel?slot=acervo-encontros`),
+        ]);
+        const [curtas, encontros] = await Promise.all([curtasResponse.json(), encontrosResponse.json()]);
+        setCapas({ curtas: curtas[0]?.url || '', encontros: encontros[0]?.url || '' });
+      } catch (error) {
+        setCapas({ curtas: '', encontros: '' });
+      }
+    };
+
+    carregarCapas();
 
     const atualizarQuandoSalvar = () => carregarEncontro();
     window.addEventListener('encontro-atualizado', atualizarQuandoSalvar);
@@ -44,8 +65,11 @@ export default function Home() {
 
       <section className="content-section grid-split" id="quem-somos">
         <div className="image-stack">
-          <div className="who-placeholder" aria-hidden="true" />
-          <div className="who-placeholder" aria-hidden="true" />
+          {QUEM_SOMOS_IMAGES.map((image, index) => (
+            <div className="who-image-frame" key={image}>
+              <img src={image} alt={`Atividade do Cinelosofia ${index + 1}`} />
+            </div>
+          ))}
         </div>
         <article className="text-panel">
           <h2>QUEM SOMOS?</h2>
@@ -99,15 +123,15 @@ export default function Home() {
         <h2 className="section-title light">ACERVOS</h2>
         <div className="acervo-grid">
           <Link to="/acervos/encontros" className="acervo-card">
-            <img src="https://res.cloudinary.com/cinelosofia/image/upload/v1786498043/cinelosofia/encontros.png" alt="Registros de encontros" />
+            {capas.encontros && <img src={capas.encontros} alt="Registros de encontros" />}
             <h3>REGISTROS DE ENCONTROS</h3>
             <p>Aqui você encontra os encontros publicados com todas as informações originalmente cadastradas.</p>
             <span className="btn-mini">ACESSAR</span>
           </Link>
           <Link to="/acervos/curtas" className="acervo-card">
-            <img src="https://res.cloudinary.com/cinelosofia/image/upload/v1786498221/cinelosofia/curtas-acervo-cover-v2.png" alt="Curtas-Metragens" />
-            <h3>CURTAS-METRAGENS</h3>
-            <p>Aqui você encontra os curtas produzidos pelos alunos do IFC - Campus Sombrio.</p>
+            {capas.curtas && <img src={capas.curtas} alt="Domínio Público" />}
+            <h3>DOMÍNIO PÚBLICO</h3>
+            <p>Aqui você encontra filmes e curta-metragens em domínio público.</p>
             <span className="btn-mini">ACESSAR</span>
           </Link>
         </div>

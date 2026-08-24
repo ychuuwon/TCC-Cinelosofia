@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
+import API_BASE from '../config';
 
 export default function Register() {
   const [matricula, setMatricula] = useState('');
@@ -31,7 +32,7 @@ export default function Register() {
     }
 
     try {
-      const response = await fetch('http://localhost:7777/api/users/register', {
+      const response = await fetch(`${API_BASE}/users/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

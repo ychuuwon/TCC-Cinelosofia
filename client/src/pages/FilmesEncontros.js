@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isAdmin } from '../auth';
 
-const API_BASE = 'http://localhost:7777/api';
+import API_BASE from '../config';
 
 function formatarData(data) {
   if (!data) {
@@ -19,7 +19,7 @@ export default function FilmesEncontros() {
   useEffect(() => {
     const carregarRegistros = async () => {
       try {
-        const response = await fetch('http://localhost:7777/api/registros-encontros');
+        const response = await fetch(`${API_BASE}/registros-encontros`);
         const data = await response.json();
         setRegistros(Array.isArray(data) ? data : []);
       } catch (error) {

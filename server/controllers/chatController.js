@@ -17,12 +17,24 @@ const normalizarTexto = (texto) => String(texto)
   .replace(/[\u0300-\u036f]/g, '')
   .toLowerCase();
 
+const tokenizarTexto = (texto) => normalizarTexto(texto)
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean);
+
 const contemPalavraBanida = async (texto) => {
-  const textoNormalizado = normalizarTexto(texto);
+  const tokensTexto = tokenizarTexto(texto);
 
   return PALAVRAS_BANIDAS.some((palavra) => {
-    const palavraNormalizada = normalizarTexto(palavra).trim();
-    return palavraNormalizada && textoNormalizado.includes(palavraNormalizada);
+    const tokensPalavra = tokenizarTexto(palavra);
+    if (tokensPalavra.length === 0 || tokensPalavra.length > tokensTexto.length) {
+      return false;
+    }
+
+    return tokensTexto.some((_, startIndex) => (
+      tokensPalavra.every((token, offset) => tokensTexto[startIndex + offset] === token)
+    ));
   });
 };
 
@@ -301,6 +313,7 @@ const rejeitar = async (req, res) => {
 };
 
 module.exports = {
+  contemPalavraBanida,
   buscarTodos,
   buscarPorId,
   criarChat,

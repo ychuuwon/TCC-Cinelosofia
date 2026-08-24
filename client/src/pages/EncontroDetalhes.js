@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Poll from '../components/Poll';
 import { useParams } from 'react-router-dom';
+import API_BASE from '../config';
 
 export default function EncontroDetalhes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -18,7 +19,7 @@ export default function EncontroDetalhes() {
   useEffect(() => {
     const carregarEncontro = async () => {
       try {
-        const endpoint = id === 'proximo' ? 'http://localhost:7777/api/encontros/proximo' : `http://localhost:7777/api/encontros/${id}`;
+        const endpoint = id === 'proximo' ? `${API_BASE}/encontros/proximo` : `${API_BASE}/encontros/${id}`;
         const response = await fetch(endpoint);
         const data = await response.json();
         setEncontro(data);
@@ -32,7 +33,7 @@ export default function EncontroDetalhes() {
     // carregar enquete ativa para decidir renderização full-width
     const carregarEnqueteAtiva = async () => {
       try {
-        const resp = await fetch('http://localhost:7777/api/enquetes/ativo');
+        const resp = await fetch(`${API_BASE}/enquetes/ativo`);
         const data = await resp.json();
         if (data && data._id) setActiveEnquete(data);
         else setActiveEnquete(null);
@@ -74,7 +75,7 @@ export default function EncontroDetalhes() {
 
       if (!targetId) {
         // tentar obter encontro ativo do servidor
-        const ativoResp = await fetch('http://localhost:7777/api/encontros/ativo');
+        const ativoResp = await fetch(`${API_BASE}/encontros/ativo`);
         if (ativoResp.ok) {
           const ativoData = await ativoResp.json();
           if (ativoData && ativoData._id) {
@@ -94,7 +95,7 @@ export default function EncontroDetalhes() {
         return;
       }
 
-      const response = await fetch(`http://localhost:7777/api/encontros/${targetId}/presenca`, {
+      const response = await fetch(`${API_BASE}/encontros/${targetId}/presenca`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

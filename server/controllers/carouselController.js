@@ -16,7 +16,7 @@ const listar = async (req, res) => {
 const criar = async (req, res) => {
   try {
     const { slot } = req.body;
-    const allowed = ['home', 'login', 'register', 'auth'];
+    const allowed = ['home', 'login', 'register', 'auth', 'acervo-curtas', 'acervo-encontros'];
     if (!slot || !allowed.includes(slot)) {
       return res.status(400).json({ erro: 'Slot inválido.' });
     }

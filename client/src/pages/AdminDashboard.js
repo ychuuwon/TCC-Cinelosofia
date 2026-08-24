@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import API_BASE from '../config';
 
 const MENU_ITEMS = [
   { id: 'encontros', label: 'Próximos encontros', description: 'Edite o encontro que aparece na home' },
   { id: 'presencas', label: 'Presenças', description: 'Acompanhe os alunos que confirmaram presença' },
-  { id: 'acervos', label: 'Acervos', description: 'Cadastre curtas e registros de encontros' },
+  { id: 'acervos', label: 'Acervos', description: 'Cadastre filmes em domínio público e registros de encontros' },
   { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas' },
 ];
 
@@ -105,7 +106,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const carregarEncontroAtual = async () => {
       try {
-        const response = await fetch('http://localhost:7777/api/encontros/ativo');
+        const response = await fetch(`${API_BASE}/encontros/ativo`);
         if (!response.ok) {
           throw new Error('Não foi possível carregar o encontro atual.');
         }
@@ -142,7 +143,7 @@ export default function AdminDashboard() {
     setMensagemAdmin('');
 
     try {
-      const response = await fetch('http://localhost:7777/api/encontros/ativo');
+      const response = await fetch(`${API_BASE}/encontros/ativo`);
       if (!response.ok) {
         throw new Error('Não foi possível carregar o encontro atual.');
       }
@@ -172,7 +173,7 @@ export default function AdminDashboard() {
     const formData = new FormData();
     formData.append('image', arquivo);
 
-    const response = await fetch('http://localhost:7777/api/upload', {
+    const response = await fetch(`${API_BASE}/upload`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -231,7 +232,7 @@ export default function AdminDashboard() {
         trailer: novoEncontro.trailer,
       };
 
-      const response = await fetch('http://localhost:7777/api/encontros/ativo', {
+      const response = await fetch(`${API_BASE}/encontros/ativo`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -550,7 +551,7 @@ export default function AdminDashboard() {
                   value={novoAcervo.tipo}
                   onChange={(event) => setNovoAcervo((prev) => ({ ...prev, tipo: event.target.value }))}
                 >
-                  <option value="curta">Curta-metragem</option>
+                  <option value="curta">Filme em domínio público</option>
                   <option value="registro">Registro de encontro</option>
                 </select>
                 <input
@@ -593,7 +594,7 @@ export default function AdminDashboard() {
                     <article key={item.id} className="admin-list-item">
                       <div>
                         <strong>{item.titulo}</strong>
-                        <p>{item.tipo === 'curta' ? 'Curta-metragem' : 'Registro de encontro'}</p>
+                        <p>{item.tipo === 'curta' ? 'Filme em domínio público' : 'Registro de encontro'}</p>
                         <span>{item.descricao}</span>
                       </div>
                       <a href={item.link} target="_blank" rel="noreferrer" className="btn-pill outline">Abrir</a>
