@@ -5,7 +5,6 @@ const path = require('path');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const connectDB = require('./mongo');
-const { PORT } = require('./config');
 const { uploadToCloudinary } = require('./utils/cloudinary');
 const userRoutes = require('./routes/userRoutes');
 const encontroRoutes = require('./routes/encontroRoutes');
@@ -98,7 +97,11 @@ const startServer = async () => {
   try {
     await connectDB();
     await ensureAdminUser();
-    app.listen(PORT, () => console.log(`Servidor rodando na porta http://localhost:${PORT}`));
+    const port = process.env.PORT || 7777;
+
+    app.listen(port, () => {
+      console.log(`Servidor rodando na porta ${port}`);
+    });
   } catch (error) {
     console.error('Erro ao iniciar o servidor:', error.message);
     process.exit(1);
