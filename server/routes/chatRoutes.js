@@ -5,6 +5,7 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 const {
   buscarTodos,
   buscarPorId,
+  consultarStatusChat,
   criarChat,
   adicionarComentario,
   deletarComentario,
@@ -20,6 +21,7 @@ router.delete('/:chatId/comentarios/:comentarioId', authMiddleware, deletarComen
 
 // Rotas públicas
 router.get('/', buscarTodos);
+router.get('/status', authMiddleware, consultarStatusChat);
 router.get('/:id', buscarPorId);
 
 // Rotas de moderação (apenas admin)

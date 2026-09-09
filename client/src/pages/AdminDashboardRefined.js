@@ -913,24 +913,44 @@ export default function AdminDashboard() {
         throw new Error(err.erro || 'Erro ao atualizar a mensagem.');
       }
 
-      const removerDenunciaResponse = await fetch(`${API_BASE}/denuncias/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!removerDenunciaResponse.ok) {
-        const err = await removerDenunciaResponse.json().catch(() => ({}));
-        throw new Error(err.erro || 'Erro ao remover a denúncia da lista.');
-      }
-
       setState((prev) => ({
         ...prev,
         denuncias: prev.denuncias.filter((item) => item.id !== id),
       }));
     } catch (error) {
       setMensagemDenuncias(error.message || 'Erro ao atualizar a mensagem.');
+    }
+  };
+
+  const banirUsuarioDoChat = async (id) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMensagemDenuncias('Faça login como administrador para banir um usuário.');
+      return;
+    }
+
+    if (!window.confirm('Banir o usuário desta mensagem do chat? Ele não poderá mais enviar mensagens.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/denuncias/${id}/banir-usuario`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.erro || 'Não foi possível banir o usuário do chat.');
+      }
+
+      setState((prev) => ({
+        ...prev,
+        denuncias: prev.denuncias.filter((item) => item.id !== id),
+      }));
+      setMensagemDenuncias('Usuário banido do chat com sucesso.');
+    } catch (error) {
+      setMensagemDenuncias(error.message || 'Erro ao banir usuário do chat.');
     }
   };
 
@@ -948,7 +968,10 @@ export default function AdminDashboard() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/denuncias`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/denuncias`, {
+        cache: 'no-store',
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.erro || 'Erro ao carregar denúncias.');
@@ -956,7 +979,11 @@ export default function AdminDashboard() {
 
       const data = await res.json();
       // normalize to expected shape in state (id, autor, motivo, mensagem, status)
-      const normalized = Array.isArray(data) ? data.map((d) => ({ id: d._id || d.id, autor: d.autor || '', motivo: d.motivo || '', mensagem: d.mensagem || '', status: d.status || 'Pendente', acaoMensagem: d.acaoMensagem || 'Pendente', chatId: d.chatId || null, comentarioId: d.comentarioId || null })) : [];
+      const normalized = Array.isArray(data)
+        ? data
+          .filter((d) => d.status === 'Pendente' && d.acaoMensagem === 'Pendente')
+          .map((d) => ({ id: d._id || d.id, autor: d.autor || '', motivo: d.motivo || '', mensagem: d.mensagem || '', status: d.status, acaoMensagem: d.acaoMensagem, chatId: d.chatId || null, comentarioId: d.comentarioId || null }))
+        : [];
       setState((prev) => ({ ...prev, denuncias: normalized }));
     } catch (error) {
       setState((prev) => ({ ...prev, denuncias: [] }));
@@ -1575,10 +1602,19 @@ export default function AdminDashboard() {
                         <p>{item.motivo}</p>
                         <span>{item.mensagem}</span>
                       </div>
-                      <div className="admin-inline-actions">
+                      <div className="admin-report-actions">
                         <button
                           type="button"
                           className="btn-pill outline"
+                          onClick={() => atualizarAcaoMensagem(item.id, 'Removida')}
+                          disabled={!item.chatId || !item.comentarioId || item.acaoMensagem === 'Removida'}
+                          title={!item.chatId || !item.comentarioId ? 'Esta denúncia não possui vínculo com uma mensagem.' : 'Apagar mensagem'}
+                        >
+                          Apagar mensagem
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-pill"
                           onClick={() => atualizarAcaoMensagem(item.id, 'Mantida')}
                           disabled={!item.chatId || !item.comentarioId || item.acaoMensagem === 'Mantida'}
                           title={!item.chatId || !item.comentarioId ? 'Esta denúncia não possui vínculo com uma mensagem.' : 'Manter mensagem'}
@@ -1587,12 +1623,12 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           type="button"
-                          className="btn-pill"
-                          onClick={() => atualizarAcaoMensagem(item.id, 'Removida')}
-                          disabled={!item.chatId || !item.comentarioId || item.acaoMensagem === 'Removida'}
-                          title={!item.chatId || !item.comentarioId ? 'Esta denúncia não possui vínculo com uma mensagem.' : 'Apagar mensagem'}
+                          className="btn-pill admin-ban-button"
+                          onClick={() => banirUsuarioDoChat(item.id)}
+                          disabled={!item.chatId || !item.comentarioId}
+                          title={!item.chatId || !item.comentarioId ? 'Esta denúncia não possui vínculo com uma mensagem.' : 'Banir usuário do chat'}
                         >
-                          Apagar mensagem
+                          Banir usuário do chat
                         </button>
                       </div>
                     </article>

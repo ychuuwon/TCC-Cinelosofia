@@ -1,9 +1,14 @@
 const Denuncia = require('../models/denuncia');
 const Chat = require('../models/chat');
+const User = require('../models/User');
 
 const listarDenuncias = async (req, res) => {
   try {
-    const denuncias = await Denuncia.find().sort({ createdAt: -1 });
+    res.set('Cache-Control', 'no-store');
+    const denuncias = await Denuncia.find({
+      status: 'Pendente',
+      acaoMensagem: 'Pendente',
+    }).sort({ createdAt: -1 });
     
     // Mapear denúncias para adicionar tipo mais legível
     const denunciasFormatadas = denuncias.map((denuncia) => ({
@@ -101,29 +106,71 @@ const atualizarAcaoMensagem = async (req, res) => {
       }
 
       const chat = await Chat.findById(denuncia.chatId);
-      if (!chat) {
-        return res.status(404).json({ erro: 'Chat da denúncia não encontrado.' });
-      }
+      const comentario = chat?.comentarios.id(denuncia.comentarioId);
 
-      const comentario = chat.comentarios.id(denuncia.comentarioId);
-      if (!comentario) {
-        return res.status(404).json({ erro: 'Comentário da denúncia não encontrado.' });
+      if (comentario) {
+        comentario.deleteOne();
+        await chat.save();
       }
-
-      comentario.deleteOne();
-      await chat.save();
     }
 
-    denuncia.acaoMensagem = acao;
-    if (acao !== 'Pendente') {
-      denuncia.status = 'Revisada';
+    if (acao === 'Pendente') {
+      denuncia.acaoMensagem = acao;
+      await denuncia.save();
+      return res.status(200).json(denuncia);
     }
-    await denuncia.save();
 
-    return res.status(200).json(denuncia);
+    await Denuncia.deleteMany({
+      chatId: denuncia.chatId,
+      comentarioId: denuncia.comentarioId,
+    });
+
+    return res.status(200).json({ mensagem: 'Denúncia revisada com sucesso.' });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao atualizar a ação da mensagem.' });
+  }
+};
+
+const banirUsuarioDoChat = async (req, res) => {
+  try {
+    const denuncia = await Denuncia.findById(req.params.id);
+    if (!denuncia?.chatId || !denuncia?.comentarioId) {
+      return res.status(400).json({ erro: 'Esta denúncia não possui vínculo com uma mensagem do chat.' });
+    }
+
+    const chat = await Chat.findById(denuncia.chatId);
+    if (!chat) {
+      return res.status(404).json({ erro: 'Chat da denúncia não encontrado.' });
+    }
+
+    const comentario = chat.comentarios.id(denuncia.comentarioId);
+    if (!comentario) {
+      return res.status(404).json({ erro: 'Comentário da denúncia não encontrado.' });
+    }
+
+    const usuario = await User.findByIdAndUpdate(
+      comentario.usuario,
+      { chatBanido: true, chatBanidoEm: new Date() },
+      { new: true }
+    ).select('_id chatBanido');
+
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário da mensagem não encontrado.' });
+    }
+
+    await Denuncia.deleteMany({
+      chatId: denuncia.chatId,
+      comentarioId: denuncia.comentarioId,
+    });
+
+    return res.status(200).json({
+      mensagem: 'Usuário banido do chat com sucesso.',
+      usuarioId: usuario._id,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao banir usuário do chat.' });
   }
 };
 
@@ -134,4 +181,5 @@ module.exports = {
   deletarDenuncia,
   atualizarStatus,
   atualizarAcaoMensagem,
+  banirUsuarioDoChat,
 };

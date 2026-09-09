@@ -7,6 +7,8 @@ function getStoredToken() {
   return localStorage.getItem('token');
 }
 
+const MENSAGEM_BANIMENTO = 'Você foi banido do chat por questões comportamentais, entre em contato com as coordenadoras caso acredite que foi um erro';
+
 async function sincronizarDenunciasUsuario(userId) {
   const token = getStoredToken();
   if (!userId || !token) {
@@ -48,6 +50,27 @@ export default function Chat() {
   const usuarioAtual = getStoredUser();
   const usuarioAtualId = usuarioAtual?._id || usuarioAtual?.id || null;
   const [reportedIds, setReportedIds] = useState([]);
+  const [chatBanido, setChatBanido] = useState(false);
+
+  const sincronizarStatusBanimento = async () => {
+    const token = getStoredToken();
+    if (!token) {
+      setChatBanido(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/chat/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setChatBanido(Boolean(data.banido));
+      }
+    } catch (error) {
+      // A consulta será refeita na próxima sincronização.
+    }
+  };
 
   useEffect(() => {
     let ativo = true;
@@ -60,6 +83,7 @@ export default function Chat() {
     };
 
     atualizarDenuncias();
+    sincronizarStatusBanimento();
     const intervalo = window.setInterval(atualizarDenuncias, 5000);
     window.addEventListener('focus', atualizarDenuncias);
 
@@ -84,9 +108,11 @@ export default function Chat() {
     }
   };
 
-  const carregarChat = async () => {
-    setCarregando(true);
-    setErro('');
+  const carregarChat = async ({ silencioso = false } = {}) => {
+    if (!silencioso) {
+      setCarregando(true);
+      setErro('');
+    }
 
     try {
       const response = await fetch(`${API_BASE}/chat`);
@@ -125,15 +151,36 @@ export default function Chat() {
 
       setChat(chats[0]);
     } catch (error) {
-      setErro(error.message || 'Erro ao carregar o chat.');
+      if (!silencioso) {
+        setErro(error.message || 'Erro ao carregar o chat.');
+      }
     } finally {
-      setCarregando(false);
+      if (!silencioso) {
+        setCarregando(false);
+      }
     }
   };
 
   useEffect(() => {
     carregarEncontroAtual();
     carregarChat();
+  }, []);
+
+  useEffect(() => {
+    const atualizarChat = () => {
+      if (document.visibilityState === 'visible') {
+        carregarChat({ silencioso: true });
+        sincronizarStatusBanimento();
+      }
+    };
+
+    const intervalo = window.setInterval(atualizarChat, 3000);
+    window.addEventListener('focus', atualizarChat);
+
+    return () => {
+      window.clearInterval(intervalo);
+      window.removeEventListener('focus', atualizarChat);
+    };
   }, []);
 
   useEffect(() => {
@@ -175,6 +222,12 @@ export default function Chat() {
       const payload = await response.json().catch(() => ({}));
       if (response.status === 422) {
         setMostrarAvisoOfensivo(true);
+        return;
+      }
+
+      if (response.status === 403) {
+        setChatBanido(true);
+        setErro(payload.erro || MENSAGEM_BANIMENTO);
         return;
       }
 
@@ -347,16 +400,20 @@ export default function Chat() {
             </div>
 
             <form className="chat-form" onSubmit={handleEnviarMensagem}>
+              {chatBanido && (
+                <p className="chat-ban-warning" role="alert">{MENSAGEM_BANIMENTO}</p>
+              )}
               <textarea
                 value={mensagem}
                 onChange={(event) => setMensagem(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Escreva sua mensagem..."
                 rows={4}
+                disabled={chatBanido || enviando}
               />
               <div className="chat-form-actions">
-                <span className="chat-helper">Enter envia • Shift + Enter quebra a linha</span>
-                <button type="submit" className="btn-primary" disabled={enviando || !mensagem.trim()}>
+                <span className="chat-helper">{chatBanido ? 'Envio de mensagens desabilitado.' : 'Enter envia • Shift + Enter quebra a linha'}</span>
+                <button type="submit" className="btn-primary" disabled={chatBanido || enviando || !mensagem.trim()}>
                   {enviando ? 'Enviando...' : 'Enviar'}
                 </button>
               </div>

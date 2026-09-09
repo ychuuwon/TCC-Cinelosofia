@@ -1438,6 +1438,22 @@ a {
   box-shadow: 0 0 0 3px rgba(169, 31, 26, 0.12);
 }
 
+.chat-form textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.chat-ban-warning {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(169, 31, 26, 0.3);
+  border-radius: 10px;
+  background: rgba(169, 31, 26, 0.08);
+  color: var(--wine);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .chat-form-actions {
   display: flex;
   justify-content: space-between;
@@ -2167,6 +2183,19 @@ a {
   opacity: 0.88;
 }
 
+.admin-list-item > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-list-item > div:first-child span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.45;
+}
+
 .admin-chip {
   display: inline-flex;
   align-items: center;
@@ -2194,14 +2223,24 @@ a {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-ban-button {
+  background: #8f1d2c;
+}
+
+.admin-ban-button:hover,
+.admin-ban-button:focus-visible {
+  background: #731523;
 }
 
 .admin-report-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(150px, 150px));
-  gap: 10px;
+  grid-template-columns: minmax(180px, 220px);
+  gap: 8px;
   justify-content: end;
-  min-width: 320px;
+  min-width: 180px;
   flex: 0 0 auto;
 }
 
@@ -2241,7 +2280,7 @@ a {
   .admin-report-actions {
     width: 100%;
     min-width: 0;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 

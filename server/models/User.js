@@ -38,6 +38,14 @@ const usuarioSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  chatBanido: {
+    type: Boolean,
+    default: false,
+  },
+  chatBanidoEm: {
+    type: Date,
+    default: null,
+  },
   resetPasswordToken: {
     type: String,
     default: null,

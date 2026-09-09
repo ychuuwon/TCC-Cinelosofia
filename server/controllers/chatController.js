@@ -1,4 +1,5 @@
 const Chat = require('../models/chat');
+const User = require('../models/User');
 const Denuncia = require('../models/denuncia');
 const { verificarModeracaoOpenAI } = require('../utils/moderacao');
 const { log } = require('../utils/logger');
@@ -82,6 +83,20 @@ const buscarPorId = async (req, res) => {
   }
 };
 
+const consultarStatusChat = async (req, res) => {
+  try {
+    const usuario = await User.findById(req.userId).select('chatBanido');
+
+    return res.status(200).json({
+      banido: Boolean(usuario?.chatBanido),
+      mensagem: usuario?.chatBanido ? 'Você foi banido do chat por questões comportamentais, entre em contato com as coordenadoras caso acredite que foi um erro' : null,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao consultar o status do chat.' });
+  }
+};
+
 const criarChat = async (req, res) => {
   try {
     const { tema } = req.body;
@@ -108,6 +123,11 @@ const criarChat = async (req, res) => {
 const adicionarComentario = async (req, res) => {
   try {
     const { texto } = req.body;
+
+    const usuario = await User.findById(req.userId).select('chatBanido');
+    if (usuario?.chatBanido) {
+      return res.status(403).json({ erro: 'Você foi banido do chat por questões comportamentais, entre em contato com as coordenadoras caso acredite que foi um erro' });
+    }
 
     if (!texto) {
       return res.status(400).json({ erro: 'Texto do comentário é obrigatório.' });
@@ -316,6 +336,7 @@ module.exports = {
   contemPalavraBanida,
   buscarTodos,
   buscarPorId,
+  consultarStatusChat,
   criarChat,
   adicionarComentario,
   deletarComentario,
