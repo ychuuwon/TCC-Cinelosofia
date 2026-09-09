@@ -9,6 +9,7 @@ const MENU_ITEMS = [
   { id: 'denuncias', label: 'Denúncias do chat', description: 'Avalie mensagens reportadas', emoji: '⚑' },
   { id: 'carousel', label: 'Carrossel', description: 'Gerencie imagens do portal', emoji: '🖼️' },
   { id: 'curtas', label: 'Domínio Público', description: 'Cadastre e gerencie os filmes', emoji: '🎞️' },
+  { id: 'usuarios', label: 'Gerenciar Usuários', description: 'Gerencie o acesso ao chat', emoji: '👤' },
 ];
 
 const defaultState = {
@@ -172,6 +173,10 @@ export default function AdminDashboard() {
   const [salvandoRegistroEncontro, setSalvandoRegistroEncontro] = useState(false);
   const [mensagemRegistro, setMensagemRegistro] = useState('');
   const [registroEditandoId, setRegistroEditandoId] = useState(null);
+  const [usuarios, setUsuarios] = useState([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [mensagemUsuarios, setMensagemUsuarios] = useState('');
+  const [alterandoAcessoUsuarioId, setAlterandoAcessoUsuarioId] = useState(null);
 
   useEffect(() => {
     saveState(state);
@@ -219,6 +224,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeSection === 'denuncias') {
       carregarDenuncias();
+    }
+    if (activeSection === 'usuarios') {
+      carregarUsuarios();
     }
   }, [activeSection]);
 
@@ -993,6 +1001,72 @@ export default function AdminDashboard() {
     }
   };
 
+  const carregarUsuarios = async () => {
+    setLoadingUsuarios(true);
+    setMensagemUsuarios('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/users/admin`, {
+        cache: 'no-store',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.erro || 'Não foi possível carregar os usuários.');
+      }
+
+      const usuariosComuns = Array.isArray(data)
+        ? data.filter((usuario) => (
+          usuario.adm !== true
+          && usuario.adm !== 'true'
+          && usuario.adm !== 1
+          && usuario.adm !== '1'
+        ))
+        : [];
+      setUsuarios(usuariosComuns);
+    } catch (error) {
+      setUsuarios([]);
+      setMensagemUsuarios(error.message || 'Erro ao carregar usuários.');
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  };
+
+  const alternarBanimentoUsuario = async (usuario) => {
+    const token = localStorage.getItem('token');
+    const acao = usuario.chatBanido ? 'permitir o uso do chat' : 'banir este usuário do chat';
+
+    if (!window.confirm(`Deseja ${acao}?`)) {
+      return;
+    }
+
+    setAlterandoAcessoUsuarioId(usuario._id);
+    setMensagemUsuarios('');
+
+    try {
+      const response = await fetch(`${API_BASE}/users/admin/${usuario._id}/chat-ban`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.erro || 'Não foi possível atualizar o acesso ao chat.');
+      }
+
+      setUsuarios((prev) => prev.map((item) => (
+        item._id === usuario._id ? { ...item, chatBanido: data.usuario.chatBanido } : item
+      )));
+      setMensagemUsuarios(data.mensagem || 'Acesso ao chat atualizado.');
+    } catch (error) {
+      setMensagemUsuarios(error.message || 'Erro ao atualizar acesso ao chat.');
+    } finally {
+      setAlterandoAcessoUsuarioId(null);
+    }
+  };
+
   const renderTextoGenero = (genero) => {
     if (!genero) {
       return '';
@@ -1574,6 +1648,54 @@ export default function AdminDashboard() {
                       );
                     })
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeSection === 'usuarios' && (
+            <div className="admin-section-card">
+              <div className="admin-section-header">
+                <div>
+                  <h2>Gerenciar Usuários</h2>
+                  <p className="auth-description">Consulte os usuários cadastrados e gerencie o acesso ao chat.</p>
+                </div>
+              </div>
+
+              {mensagemUsuarios && <p className="chat-status success">{mensagemUsuarios}</p>}
+              {loadingUsuarios ? (
+                <p className="chat-status">Carregando usuários...</p>
+              ) : usuarios.length === 0 ? (
+                <p className="chat-status">Nenhum usuário cadastrado.</p>
+              ) : (
+                <div className="admin-users-grid">
+                  {usuarios.map((usuario) => {
+                    const alterando = alterandoAcessoUsuarioId === usuario._id;
+
+                    return (
+                      <article
+                        key={usuario._id}
+                        className="admin-user-card"
+                        tabIndex="0"
+                        aria-label={`Detalhes do usuário ${usuario.nome_usuario}`}
+                      >
+                        <strong>{usuario.nome_usuario}</strong>
+                        <div className="admin-user-details">
+                          <span><b>Nome de usuário:</b> {usuario.nome_usuario}</span>
+                          <span><b>Email:</b> {usuario.email}</span>
+                          <span><b>Matrícula:</b> {usuario.matricula}</span>
+                          <button
+                            type="button"
+                            className={`btn-pill ${usuario.chatBanido ? 'outline' : 'admin-ban-button'}`}
+                            onClick={() => alternarBanimentoUsuario(usuario)}
+                            disabled={alterando}
+                          >
+                            {alterando ? 'Atualizando...' : usuario.chatBanido ? 'Permitir uso do chat' : 'Banir usuário do chat'}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </div>

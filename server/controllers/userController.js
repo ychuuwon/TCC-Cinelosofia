@@ -239,9 +239,60 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const listarUsuariosAdmin = async (req, res) => {
+  try {
+    const usuarios = await User.find({ adm: { $ne: true } })
+      .select('_id nome_usuario email matricula adm chatBanido')
+      .sort({ nome_usuario: 1 })
+      .lean();
+
+    const usuariosComuns = usuarios.filter((usuario) => (
+      usuario.adm !== true
+      && usuario.adm !== 'true'
+      && usuario.adm !== 1
+      && usuario.adm !== '1'
+    ));
+
+    return res.status(200).json(usuariosComuns);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao listar usuários.' });
+  }
+};
+
+const alternarBanimentoChat = async (req, res) => {
+  try {
+    const usuario = await User.findById(req.params.id);
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    usuario.chatBanido = !usuario.chatBanido;
+    usuario.chatBanidoEm = usuario.chatBanido ? new Date() : null;
+    await usuario.save();
+
+    return res.status(200).json({
+      mensagem: usuario.chatBanido ? 'Usuário banido do chat.' : 'Usuário autorizado a usar o chat.',
+      usuario: {
+        _id: usuario._id,
+        nome_usuario: usuario.nome_usuario,
+        email: usuario.email,
+        matricula: usuario.matricula,
+        adm: usuario.adm,
+        chatBanido: usuario.chatBanido,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao atualizar acesso ao chat.' });
+  }
+};
+
 module.exports = {
   loginUser,
   registerUser,
   requestPasswordReset,
   resetPassword,
+  listarUsuariosAdmin,
+  alternarBanimentoChat,
 };
