@@ -823,6 +823,18 @@ a {
   z-index: 3;
 }
 
+.poll-closed-message {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid rgba(169, 31, 26, 0.25);
+  border-radius: 8px;
+  background: rgba(169, 31, 26, 0.09);
+  color: var(--wine);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .poll-options {
   display: grid;
   grid-template-columns: 1fr 1fr;

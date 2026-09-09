@@ -138,6 +138,7 @@ export default function Poll({ compact = false }) {
   return (
     <div className={`poll-panel ${compact ? 'compact' : ''}`}>
       <h3>{enquete.titulo}</h3>
+      {!enquete.isOpen && <p className="poll-closed-message">Enquete fechada.</p>}
       <div className="poll-options">
         {enquete.options.map((opt, idx) => (
           <div key={idx} className="poll-option">
@@ -179,7 +180,6 @@ export default function Poll({ compact = false }) {
         ))}
       </div>
       {mensagem && <p className="auth-message">{mensagem}</p>}
-      {!enquete.isOpen && <p className="auth-message">Enquete fechada.</p>}
     </div>
   );
 }
