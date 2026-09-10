@@ -36,7 +36,7 @@ async function sincronizarDenunciasUsuario(userId) {
   }
 }
 
-export default function Chat() {
+export default function Chat({ compact = false, onClose }) {
   const navigate = useNavigate();
   const [chat, setChat] = useState(null);
   const [mensagem, setMensagem] = useState('');
@@ -320,10 +320,15 @@ export default function Chat() {
   };
 
   return (
-    <main className="chat-page">
-      <h1>CHAT</h1>
+    <main className={`chat-page${compact ? ' chat-page--compact' : ''}`}>
+      {!compact && <h1>CHAT</h1>}
       <section className="chat-panel">
         <header className="chat-header">
+          {compact && (
+            <button type="button" className="chat-close-button" onClick={onClose} aria-label="Fechar chat">
+              X
+            </button>
+          )}
           <div>
             <p className="eyebrow">Comunidade</p>
             <h2>{encontroAtual || 'Canal Geral'}</h2>

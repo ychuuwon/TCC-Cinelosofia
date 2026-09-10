@@ -139,6 +139,27 @@ a {
   border-radius: 5px;
 }
 
+button:not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-feature-card):not(.admin-back-button):not(.carousel-upload-button):not(.admin-ban-button):not(.password-toggle),
+.btn-primary:not(.carousel-upload-button):not(.admin-ban-button),
+.btn-login,
+.btn-logout,
+.btn-pill:not(.admin-ban-button),
+.chat-float-button,
+.navbar-menu a {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-feature-card):not(.admin-back-button):not(.carousel-upload-button):not(.admin-ban-button):not(.password-toggle):hover,
+.btn-primary:not(.carousel-upload-button):not(.admin-ban-button):hover,
+.btn-login:hover,
+.btn-logout:hover,
+.btn-pill:not(.admin-ban-button):hover,
+.chat-float-button:hover,
+.navbar-menu a:hover {
+  transform: translateY(-3px);
+}
+
 .btn-primary.outline,
 .btn-pill.outline {
   background: transparent;
@@ -714,6 +735,9 @@ a {
   bottom: 18px;
   width: 84px;
   height: 84px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   z-index: 30;
 }
 
@@ -721,6 +745,57 @@ a {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.chat-popup {
+  position: fixed;
+  right: 24px;
+  bottom: 18px;
+  z-index: 40;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 36px);
+  filter: drop-shadow(0 18px 34px rgba(43, 20, 16, 0.24));
+}
+
+.chat-page--compact {
+  max-width: none;
+  max-height: calc(100vh - 36px);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.chat-page--compact .chat-panel {
+  max-height: calc(100vh - 36px);
+  overflow: hidden;
+  padding: 14px;
+  border-width: 5px;
+  border-radius: 14px;
+}
+
+.chat-page--compact .chat-header {
+  position: relative;
+  padding: 10px 12px 10px 48px;
+}
+
+.chat-page--compact .chat-messages {
+  max-height: min(360px, 40vh);
+}
+
+.chat-close-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(169, 31, 26, 0.2);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--wine);
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .auth-screen {
