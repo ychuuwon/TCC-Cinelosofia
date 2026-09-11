@@ -113,7 +113,9 @@ export default function App() {
               <>
                 <Navbar token={token} user={user} onLogout={handleLogout} />
                 <Chat />
-                <Footer />
+                <div className="chat-desktop-footer">
+                  <Footer />
+                </div>
               </>
             )}
           />
@@ -170,7 +172,7 @@ function ScrollToTop() {
 function ChatButtonWithVisibility() {
   const location = useLocation();
 
-  if (location.pathname === '/login' || location.pathname === '/register') {
+  if (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/chat') {
     return null;
   }
 

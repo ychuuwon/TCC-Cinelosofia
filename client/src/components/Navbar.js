@@ -9,9 +9,24 @@ export default function Navbar({ token, onLogout }) {
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
+    let userScrollIntent = false;
+    let intentResetTimer;
+
+    const markUserScrollIntent = () => {
+      userScrollIntent = true;
+      window.clearTimeout(intentResetTimer);
+      intentResetTimer = window.setTimeout(() => {
+        userScrollIntent = false;
+      }, 150);
+    };
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+
+      if (!userScrollIntent) {
+        lastScrollY = currentScrollY;
+        return;
+      }
 
       if (currentScrollY <= 8) {
         setNavbarHidden(false);
@@ -28,8 +43,15 @@ export default function Navbar({ token, onLogout }) {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('wheel', markUserScrollIntent, { passive: true });
+    window.addEventListener('touchstart', markUserScrollIntent, { passive: true });
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', markUserScrollIntent);
+      window.removeEventListener('touchstart', markUserScrollIntent);
+      window.clearTimeout(intentResetTimer);
+    };
   }, []);
 
   const handleLogout = () => {

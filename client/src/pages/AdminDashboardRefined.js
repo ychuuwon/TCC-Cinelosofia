@@ -1084,14 +1084,15 @@ export default function AdminDashboard() {
 
   return (
     <main className="admin-page">
-      <section className="admin-hero">
-        <div>
-          <p className="eyebrow">Painel administrativo</p>
-          <h1>Administre o portal Cinelosofia</h1>
-          <p>Gerencie encontros, presenças, filmes em domínio público, registros de encontros e denúncias do chat a partir de um único painel.</p>
-          
-        </div>
-      </section>
+      {!activeSection && (
+        <section className="admin-hero">
+          <div>
+            <p className="eyebrow">Painel administrativo</p>
+            <h1>Administre o portal Cinelosofia</h1>
+            <p>Gerencie encontros, presenças, filmes em domínio público, registros de encontros e denúncias do chat a partir de um único painel.</p>
+          </div>
+        </section>
+      )}
 
       {!activeSection ? (
         <section className="admin-home-grid" aria-label="Funcionalidades administrativas">

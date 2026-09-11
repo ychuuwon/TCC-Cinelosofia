@@ -46,11 +46,37 @@ export default function Chat({ compact = false, onClose }) {
   const [sucesso, setSucesso] = useState('');
   const [mostrarAvisoOfensivo, setMostrarAvisoOfensivo] = useState(false);
   const [encontroAtual, setEncontroAtual] = useState('');
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const usuarioAtual = getStoredUser();
   const usuarioAtualId = usuarioAtual?._id || usuarioAtual?.id || null;
   const [reportedIds, setReportedIds] = useState([]);
   const [chatBanido, setChatBanido] = useState(false);
+  const [chatHeaderHidden, setChatHeaderHidden] = useState(false);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 8) {
+        setChatHeaderHidden(false);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      if (Math.abs(currentScrollY - lastScrollY) < 6) {
+        return;
+      }
+
+      setChatHeaderHidden(currentScrollY > lastScrollY);
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const sincronizarStatusBanimento = async () => {
     const token = getStoredToken();
@@ -185,9 +211,13 @@ export default function Chat({ compact = false, onClose }) {
 
   useEffect(() => {
     if (!carregando) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      const messagesContainer = messagesContainerRef.current;
+      messagesContainer?.scrollTo({
+        top: messagesContainer.scrollHeight,
+        behavior: 'smooth',
+      });
     }
-  }, [chat?.comentarios?.length, carregando, sucesso, erro]);
+  }, [chat?.comentarios?.length, carregando]);
 
   const handleEnviarMensagem = async (event) => {
     event.preventDefault();
@@ -237,7 +267,7 @@ export default function Chat({ compact = false, onClose }) {
 
       setMensagem('');
       setSucesso('Mensagem enviada com sucesso.');
-      await carregarChat();
+      await carregarChat({ silencioso: true });
     } catch (error) {
       setErro(error.message || 'Erro ao enviar a mensagem.');
     } finally {
@@ -274,7 +304,7 @@ export default function Chat({ compact = false, onClose }) {
       }
 
       setSucesso('Mensagem apagada com sucesso.');
-      await carregarChat();
+      await carregarChat({ silencioso: true });
     } catch (error) {
       setErro(error.message || 'Erro ao apagar a mensagem.');
     }
@@ -322,22 +352,24 @@ export default function Chat({ compact = false, onClose }) {
   return (
     <main className={`chat-page${compact ? ' chat-page--compact' : ''}`}>
       {!compact && <h1>CHAT</h1>}
-      <section className="chat-panel">
-        <header className="chat-header">
-          {compact && (
-            <button type="button" className="chat-close-button" onClick={onClose} aria-label="Fechar chat">
-              X
-            </button>
-          )}
-          <div>
-            <p className="eyebrow">Comunidade</p>
-            <h2>{encontroAtual || 'Canal Geral'}</h2>
-            <span className="chat-status-pill">Ativo agora</span>
-          </div>
-          <div className="chat-header-meta">
-            <span>{chat?.comentarios?.length || 0} mensagens</span>
-          </div>
-        </header>
+      <section className={`chat-panel${chatHeaderHidden ? ' chat-panel-header-hidden' : ''}`}>
+        <div className={`chat-header-shell${chatHeaderHidden ? ' chat-header-shell-hidden' : ''}`}>
+          <header className="chat-header">
+            {compact && (
+              <button type="button" className="chat-close-button" onClick={onClose} aria-label="Fechar chat">
+                X
+              </button>
+            )}
+            <div>
+              <p className="eyebrow">Comunidade</p>
+              <h2>{encontroAtual || 'Canal Geral'}</h2>
+              <span className="chat-status-pill">Ativo agora</span>
+            </div>
+            <div className="chat-header-meta">
+              <span>{chat?.comentarios?.length || 0} mensagens</span>
+            </div>
+          </header>
+        </div>
 
         {erro && <p className="chat-status error">{erro}</p>}
         {sucesso && <p className="chat-status success">{sucesso}</p>}
@@ -346,7 +378,7 @@ export default function Chat({ compact = false, onClose }) {
           <div className="chat-placeholder">Carregando mensagens...</div>
         ) : (
           <>
-            <div className="chat-messages">
+            <div className="chat-messages" ref={messagesContainerRef}>
               {chat?.comentarios?.length ? (
                 chat.comentarios.map((comentario) => {
                   const nomeUsuario = comentario.usuario?.nome_usuario || 'Usuário';
@@ -401,7 +433,6 @@ export default function Chat({ compact = false, onClose }) {
               ) : (
                 <div className="chat-placeholder">Ainda não há mensagens neste canal. Seja o primeiro a falar.</div>
               )}
-              <div ref={messagesEndRef} />
             </div>
 
             <form className="chat-form" onSubmit={handleEnviarMensagem}>

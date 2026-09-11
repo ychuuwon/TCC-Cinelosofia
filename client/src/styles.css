@@ -25,6 +25,10 @@ a {
   min-height: 100vh;
 }
 
+.chat-desktop-footer {
+  display: block;
+}
+
 .navbar-cinelosofia,
 .navbar {
   display: flex;
@@ -1407,6 +1411,18 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   box-shadow: var(--panel-shadow);
 }
 
+.chat-header-shell {
+  max-height: 140px;
+  overflow: hidden;
+  transition: max-height 280ms ease, opacity 280ms ease;
+}
+
+.chat-header-shell-hidden {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .chat-header {
   display: flex;
   align-items: center;
@@ -1684,7 +1700,17 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   border-color: rgba(169, 31, 26, 0.16);
 }
 
+@media (max-width: 900px) {
+  .chat-panel-header-hidden .chat-messages {
+    max-height: min(560px, calc(100vh - 220px));
+  }
+}
+
 @media (max-width: 768px) {
+  .chat-header-shell {
+    max-height: 180px;
+  }
+
   .chat-panel {
     padding: 16px;
   }
@@ -1731,6 +1757,14 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
 
   .admin-list-actions {
     justify-content: flex-start;
+  }
+}
+
+@media (min-width: 901px) {
+  .chat-header-shell-hidden {
+    max-height: 140px;
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
@@ -1951,6 +1985,10 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
 }
 
 @media (max-width: 900px) {
+  .chat-desktop-footer {
+    display: none;
+  }
+
   .navbar-cinelosofia,
   .navbar {
     box-sizing: border-box;
@@ -2274,20 +2312,29 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
 }
 
 .admin-back-button {
-  margin-bottom: 16px;
-  padding: 8px 0;
-  border: 0;
-  background: transparent;
+  align-self: flex-start;
+  margin: 0;
+  padding: 9px 16px 9px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(244, 239, 223, 0.8);
+  border-radius: 8px;
+  background: rgba(112, 19, 16, 0.82);
   color: var(--text-light);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
+  line-height: 1;
   cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .admin-back-button:hover,
 .admin-back-button:focus-visible {
+  background: var(--wine);
+  border-color: var(--text-light);
   color: var(--text-light);
-  text-decoration: underline;
+  transform: translateX(-2px);
 }
 
 @media (max-width: 900px) {
