@@ -22,7 +22,7 @@ export default function Navbar({ token, onLogout }) {
 
     if (window.location.pathname !== '/') {
       navigate('/');
-      setTimeout(scrollToFooter, 250);
+      window.setTimeout(scrollToFooter, 400);
     } else {
       scrollToFooter();
     }
@@ -43,7 +43,7 @@ export default function Navbar({ token, onLogout }) {
           {token && isAdmin() && (
             <li><Link to="/admin">ADMIN</Link></li>
           )}
-          <li><a href="/" onClick={handleContactClick}>CONTATO</a></li>
+          <li className="navbar-contact-item"><a href="/#contato" onClick={handleContactClick}>CONTATO</a></li>
         </ul>
 
         <div className="navbar-auth">
