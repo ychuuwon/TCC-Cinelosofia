@@ -1,9 +1,36 @@
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import { isAdmin } from '../auth';
 
 export default function Navbar({ token, onLogout }) {
   const navigate = useNavigate();
+  const [navbarHidden, setNavbarHidden] = useState(false);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 8) {
+        setNavbarHidden(false);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      if (Math.abs(currentScrollY - lastScrollY) < 6) {
+        return;
+      }
+
+      setNavbarHidden(currentScrollY > lastScrollY);
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     onLogout();
@@ -29,7 +56,7 @@ export default function Navbar({ token, onLogout }) {
   };
 
   return (
-    <nav className="navbar navbar-cinelosofia">
+    <nav className={`navbar navbar-cinelosofia${navbarHidden ? ' navbar-hidden' : ''}`}>
       <div className="navbar-container nav-links">
         <Link to="/" className="navbar-logo logo">
           <img src="/imagens/cinenome.png" alt="Cinelosofia" />

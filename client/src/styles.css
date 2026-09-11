@@ -32,13 +32,21 @@ a {
   align-items: center;
   background-color: var(--paper);
   border-bottom: 4px solid var(--wine);
-  padding: 4px 5%;
+  padding: 0 5%;
   color: var(--ink);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: var(--panel-shadow);
   min-height: 44px;
+  transition: transform 280ms ease, opacity 280ms ease;
+  will-change: transform, opacity;
+}
+
+.navbar-hidden {
+  transform: translateY(calc(-100% - 4px));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .navbar-container {
@@ -72,6 +80,18 @@ a {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+}
+
+@media (min-width: 901px) {
+  .navbar-logo {
+    height: 110px;
+    overflow: hidden;
+    align-items: center;
+  }
+
+  .navbar-logo img {
+    transform: none;
+  }
 }
 
 .navbar-menu {
