@@ -14,6 +14,6 @@ module.exports = {
   EMAIL_USER: process.env.EMAIL_USER?.trim(),
   EMAIL_PASS: process.env.EMAIL_PASS?.replace(/\s/g, ''),
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
-  SMTP_PORT: Number(process.env.SMTP_PORT) || 587,
-  SMTP_SECURE: parseBoolean(process.env.SMTP_SECURE, false),
+  SMTP_PORT: Number(process.env.SMTP_PORT) || 465,
+  SMTP_SECURE: parseBoolean(process.env.SMTP_SECURE, true),
 };

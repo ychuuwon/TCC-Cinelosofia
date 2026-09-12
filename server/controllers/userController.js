@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
   secure: SMTP_SECURE,
-  requireTLS: !SMTP_SECURE,
+  requireTLS: false,
   connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 15000,
@@ -25,6 +25,19 @@ const transporter = nodemailer.createTransport({
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
+});
+
+transporter.verify((error) => {
+  if (error) {
+    console.error('SMTP indisponível na inicialização:', {
+      code: error.code,
+      responseCode: error.responseCode,
+      message: error.message,
+    });
+    return;
+  }
+
+  console.log(`SMTP pronto para envio (${SMTP_HOST}:${SMTP_PORT}).`);
 });
 
 const loginUser = async (req, res) => {
@@ -211,6 +224,7 @@ const requestPasswordReset = async (req, res) => {
       });
       return res.status(503).json({
         erro: 'Não foi possível enviar o email de recuperação. Tente novamente mais tarde.',
+        codigo: emailError.code || 'SMTP_SEND_FAILED',
       });
     }
 
