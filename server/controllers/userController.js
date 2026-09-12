@@ -128,7 +128,7 @@ const registerUser = async (req, res) => {
 
 const requestPasswordReset = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
     if (!email) {
       return res.status(400).json({ erro: 'Email é obrigatório.' });
@@ -177,7 +177,17 @@ const requestPasswordReset = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      usuario.resetPasswordToken = null;
+      usuario.resetPasswordExpires = null;
+      await usuario.save();
+      console.error('Erro ao enviar email de recuperação:', emailError.message);
+      return res.status(503).json({
+        erro: 'Não foi possível enviar o email de recuperação. Tente novamente mais tarde.',
+      });
+    }
 
     return res.status(200).json({
       mensagem: 'Se o email existir em nosso banco de dados, você receberá um link de recuperação.',

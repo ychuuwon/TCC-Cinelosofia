@@ -27,7 +27,10 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json')
+        ? await response.json()
+        : { erro: 'A API de recuperação não está disponível neste endereço.' };
 
       if (!response.ok) {
         setMensagem(data.erro || 'Erro ao solicitar recuperação');
