@@ -14,9 +14,9 @@ const {
 
 // Configurar transporte do Nodemailer
 const smtpOptions = {
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
+  connectionTimeout: 4000,
+  greetingTimeout: 4000,
+  socketTimeout: 4000,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
