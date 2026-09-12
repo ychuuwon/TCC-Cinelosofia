@@ -167,24 +167,18 @@ const requestPasswordReset = async (req, res) => {
     usuario.resetPasswordExpires = resetTokenExpires;
     await usuario.save();
 
-    // Em produção, a origem da solicitação evita links apontando para localhost.
+    // Prefer the configured public frontend URL, then the browser origin.
     const configuredClientUrl = process.env.CLIENT_URL?.trim();
+    const requestOrigin = req.get('origin')?.trim();
     const isLocalClientUrl = configuredClientUrl
       && /:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(configuredClientUrl);
-
-    if (process.env.NODE_ENV === 'production' && (!configuredClientUrl || isLocalClientUrl)) {
-      console.error('Recuperação de senha indisponível: CLIENT_URL deve apontar para o frontend publicado.');
-      usuario.resetPasswordToken = null;
-      usuario.resetPasswordExpires = null;
-      await usuario.save();
-      return res.status(503).json({
-        erro: 'O serviço de recuperação está temporariamente indisponível. Tente novamente mais tarde.',
-      });
-    }
-
-    const clientUrl = configuredClientUrl && !isLocalClientUrl
-      ? configuredClientUrl
-      : (req.get('origin') || `${req.protocol}://${req.get('host')}`);
+    const isPublicRequestOrigin = requestOrigin
+      && !/:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(requestOrigin);
+    const clientUrl = isPublicRequestOrigin
+      ? requestOrigin
+      : (configuredClientUrl && !isLocalClientUrl
+        ? configuredClientUrl
+        : (requestOrigin || `${req.protocol}://${req.get('host')}`));
     const resetLink = `${clientUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
     // Enviar email
