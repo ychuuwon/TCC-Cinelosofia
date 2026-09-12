@@ -13,11 +13,7 @@ const {
 } = require('../config');
 
 // Configurar transporte do Nodemailer
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_SECURE,
-  requireTLS: false,
+const smtpOptions = {
   connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 15000,
@@ -25,7 +21,40 @@ const transporter = nodemailer.createTransport({
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
+};
+
+const transporter = nodemailer.createTransport({
+  ...smtpOptions,
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_SECURE,
+  requireTLS: false,
 });
+
+const fallbackTransporter = SMTP_HOST === 'smtp.gmail.com' && SMTP_PORT === 465
+  ? nodemailer.createTransport({
+    ...smtpOptions,
+    host: SMTP_HOST,
+    port: 587,
+    secure: false,
+    requireTLS: true,
+  })
+  : null;
+
+const sendEmail = async (mailOptions) => {
+  try {
+    return await transporter.sendMail(mailOptions);
+  } catch (primaryError) {
+    if (!fallbackTransporter) throw primaryError;
+
+    console.error('SMTP principal falhou; tentando Gmail STARTTLS:', {
+      code: primaryError.code,
+      responseCode: primaryError.responseCode,
+      message: primaryError.message,
+    });
+    return fallbackTransporter.sendMail(mailOptions);
+  }
+};
 
 transporter.verify((error) => {
   if (error) {
@@ -39,6 +68,18 @@ transporter.verify((error) => {
 
   console.log(`SMTP pronto para envio (${SMTP_HOST}:${SMTP_PORT}).`);
 });
+
+if (fallbackTransporter) {
+  fallbackTransporter.verify((error) => {
+    if (error) {
+      console.error('SMTP fallback indisponível (Gmail 587):', {
+        code: error.code,
+        responseCode: error.responseCode,
+        message: error.message,
+      });
+    }
+  });
+}
 
 const loginUser = async (req, res) => {
   try {
@@ -211,7 +252,7 @@ const requestPasswordReset = async (req, res) => {
     };
 
     try {
-      await transporter.sendMail(mailOptions);
+      await sendEmail(mailOptions);
     } catch (emailError) {
       usuario.resetPasswordToken = null;
       usuario.resetPasswordExpires = null;
@@ -286,7 +327,7 @@ const resetPassword = async (req, res) => {
     };
 
     try {
-      await transporter.sendMail(mailOptions);
+      await sendEmail(mailOptions);
     } catch (emailError) {
       // A senha já foi alterada; a falha da confirmação não deve desfazer o reset.
       console.error('Senha alterada, mas não foi possível enviar confirmação:', {
