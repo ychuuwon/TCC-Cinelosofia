@@ -33,7 +33,9 @@ export default function ForgotPassword() {
         : { erro: 'A API de recuperação não está disponível neste endereço.' };
 
       if (!response.ok) {
-        setMensagem(data.erro || 'Erro ao solicitar recuperação');
+        setMensagem(data.codigo && data.erro
+          ? `${data.erro} Código: ${data.codigo}`
+          : (data.erro || 'Erro ao solicitar recuperação'));
         setLoading(false);
         return;
       }

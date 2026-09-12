@@ -158,9 +158,8 @@ const requestPasswordReset = async (req, res) => {
 
     const usuario = await User.findOne({ email });
     if (!usuario) {
-      // Por segurança, não informamos se o email existe ou não
-      return res.status(200).json({
-        mensagem: 'Se o email existir em nosso banco de dados, você receberá um link de recuperação.',
+      return res.status(404).json({
+        erro: 'Este email não está cadastrado no Cinelosofia.',
       });
     }
 
@@ -229,7 +228,7 @@ const requestPasswordReset = async (req, res) => {
     }
 
     return res.status(200).json({
-      mensagem: 'Se o email existir em nosso banco de dados, você receberá um link de recuperação.',
+      mensagem: 'Link de recuperação enviado para o email cadastrado.',
     });
   } catch (error) {
     console.error(error);
