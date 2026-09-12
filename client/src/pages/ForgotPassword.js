@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
-import API_BASE from '../config';
+import API_BASE, { fetchWithTimeout } from '../config';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -21,7 +21,7 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/users/forgot-password`, {
+      const response = await fetchWithTimeout(`${API_BASE}/users/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -40,7 +40,9 @@ export default function ForgotPassword() {
       setEmail('');
       setLoading(false);
     } catch (error) {
-      setMensagem('Erro na conexão com o servidor');
+      setMensagem(error.name === 'AbortError'
+        ? 'O servidor demorou para responder. Tente novamente em alguns instantes.'
+        : 'Erro na conexão com o servidor');
       setLoading(false);
     }
   };

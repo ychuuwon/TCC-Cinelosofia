@@ -9,6 +9,9 @@ const { EMAIL_USER, EMAIL_PASS } = process.env;
 // Configurar transporte do Nodemailer
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
@@ -148,8 +151,14 @@ const requestPasswordReset = async (req, res) => {
     usuario.resetPasswordExpires = resetTokenExpires;
     await usuario.save();
 
-    // Criar link de reset
-    const resetLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    // Em produção, a origem da solicitação evita links apontando para localhost.
+    const configuredClientUrl = process.env.CLIENT_URL;
+    const isLocalClientUrl = !configuredClientUrl
+      || /:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(configuredClientUrl);
+    const clientUrl = configuredClientUrl && !isLocalClientUrl
+      ? configuredClientUrl
+      : (req.get('origin') || `${req.protocol}://${req.get('host')}`);
+    const resetLink = `${clientUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
     // Enviar email
     const mailOptions = {

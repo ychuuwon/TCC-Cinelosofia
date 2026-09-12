@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
-import API_BASE from '../config';
+import API_BASE, { fetchWithTimeout } from '../config';
 
 export default function ResetPassword() {
   const [novaSenha, setNovaSenha] = useState('');
@@ -48,7 +48,7 @@ export default function ResetPassword() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/users/reset-password`, {
+      const response = await fetchWithTimeout(`${API_BASE}/users/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,7 +76,9 @@ export default function ResetPassword() {
         navigate('/login');
       }, 2000);
     } catch (error) {
-      setMensagem('Erro na conexão com o servidor');
+      setMensagem(error.name === 'AbortError'
+        ? 'O servidor demorou para responder. Tente novamente em alguns instantes.'
+        : 'Erro na conexão com o servidor');
       setLoading(false);
     }
   };
