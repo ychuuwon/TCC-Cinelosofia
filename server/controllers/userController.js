@@ -3,12 +3,21 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
-const { JWT_SECRET } = require('../config');
-const { EMAIL_USER, EMAIL_PASS } = process.env;
+const {
+  JWT_SECRET,
+  EMAIL_USER,
+  EMAIL_PASS,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_SECURE,
+} = require('../config');
 
 // Configurar transporte do Nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_SECURE,
+  requireTLS: !SMTP_SECURE,
   connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 15000,
@@ -142,6 +151,13 @@ const requestPasswordReset = async (req, res) => {
       });
     }
 
+    if (!EMAIL_USER || !EMAIL_PASS) {
+      console.error('Recuperação de senha indisponível: EMAIL_USER/EMAIL_PASS não configurados.');
+      return res.status(503).json({
+        erro: 'O serviço de email está temporariamente indisponível. Tente novamente mais tarde.',
+      });
+    }
+
     // Gerar token de reset
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
@@ -152,9 +168,20 @@ const requestPasswordReset = async (req, res) => {
     await usuario.save();
 
     // Em produção, a origem da solicitação evita links apontando para localhost.
-    const configuredClientUrl = process.env.CLIENT_URL;
-    const isLocalClientUrl = !configuredClientUrl
-      || /:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(configuredClientUrl);
+    const configuredClientUrl = process.env.CLIENT_URL?.trim();
+    const isLocalClientUrl = configuredClientUrl
+      && /:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(configuredClientUrl);
+
+    if (process.env.NODE_ENV === 'production' && (!configuredClientUrl || isLocalClientUrl)) {
+      console.error('Recuperação de senha indisponível: CLIENT_URL deve apontar para o frontend publicado.');
+      usuario.resetPasswordToken = null;
+      usuario.resetPasswordExpires = null;
+      await usuario.save();
+      return res.status(503).json({
+        erro: 'O serviço de recuperação está temporariamente indisponível. Tente novamente mais tarde.',
+      });
+    }
+
     const clientUrl = configuredClientUrl && !isLocalClientUrl
       ? configuredClientUrl
       : (req.get('origin') || `${req.protocol}://${req.get('host')}`);
@@ -183,7 +210,11 @@ const requestPasswordReset = async (req, res) => {
       usuario.resetPasswordToken = null;
       usuario.resetPasswordExpires = null;
       await usuario.save();
-      console.error('Erro ao enviar email de recuperação:', emailError.message);
+      console.error('Erro ao enviar email de recuperação:', {
+        code: emailError.code,
+        responseCode: emailError.responseCode,
+        message: emailError.message,
+      });
       return res.status(503).json({
         erro: 'Não foi possível enviar o email de recuperação. Tente novamente mais tarde.',
       });
@@ -247,7 +278,16 @@ const resetPassword = async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      // A senha já foi alterada; a falha da confirmação não deve desfazer o reset.
+      console.error('Senha alterada, mas não foi possível enviar confirmação:', {
+        code: emailError.code,
+        responseCode: emailError.responseCode,
+        message: emailError.message,
+      });
+    }
 
     return res.status(200).json({
       mensagem: 'Senha alterada com sucesso! Você já pode fazer login com sua nova senha.',
