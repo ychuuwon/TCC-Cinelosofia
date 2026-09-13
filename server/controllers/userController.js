@@ -7,7 +7,6 @@ const {
   JWT_SECRET,
   EMAIL_USER,
   EMAIL_PASS,
-  BREVO_API_KEY,
   SMTP_HOST,
   SMTP_PORT,
   SMTP_SECURE,
@@ -29,7 +28,7 @@ const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
   secure: SMTP_SECURE,
-  requireTLS: false,
+  requireTLS: !SMTP_SECURE,
 });
 
 const fallbackTransporter = SMTP_HOST === 'smtp.gmail.com' && SMTP_PORT === 465
@@ -43,32 +42,6 @@ const fallbackTransporter = SMTP_HOST === 'smtp.gmail.com' && SMTP_PORT === 465
   : null;
 
 const sendEmail = async (mailOptions) => {
-  if (BREVO_API_KEY) {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'api-key': BREVO_API_KEY,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        sender: { email: EMAIL_USER, name: 'Cinelosofia' },
-        to: [{ email: mailOptions.to }],
-        subject: mailOptions.subject,
-        htmlContent: mailOptions.html,
-      }),
-    });
-
-    if (!response.ok) {
-      const details = await response.text();
-      const error = new Error(`Brevo API ${response.status}: ${details}`);
-      error.code = 'BREVO_API_ERROR';
-      throw error;
-    }
-
-    return response.json();
-  }
-
   try {
     return await transporter.sendMail(mailOptions);
   } catch (primaryError) {
@@ -83,7 +56,7 @@ const sendEmail = async (mailOptions) => {
   }
 };
 
-if (!BREVO_API_KEY) transporter.verify((error) => {
+if (EMAIL_USER && EMAIL_PASS) transporter.verify((error) => {
   if (error) {
     console.error('SMTP indisponível na inicialização:', {
       code: error.code,
@@ -96,7 +69,7 @@ if (!BREVO_API_KEY) transporter.verify((error) => {
   console.log(`SMTP pronto para envio (${SMTP_HOST}:${SMTP_PORT}).`);
 });
 
-if (!BREVO_API_KEY && fallbackTransporter) {
+if (fallbackTransporter && EMAIL_USER && EMAIL_PASS) {
   fallbackTransporter.verify((error) => {
     if (error) {
       console.error('SMTP fallback indisponível (Gmail 587):', {
