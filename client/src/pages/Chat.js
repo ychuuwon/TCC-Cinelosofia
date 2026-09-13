@@ -266,7 +266,6 @@ export default function Chat({ compact = false, onClose }) {
       }
 
       setMensagem('');
-      setSucesso('Mensagem enviada com sucesso.');
       await carregarChat({ silencioso: true });
     } catch (error) {
       setErro(error.message || 'Erro ao enviar a mensagem.');
