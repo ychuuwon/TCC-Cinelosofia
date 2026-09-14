@@ -9,11 +9,13 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [mensagem, setMensagem] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (enviando) return;
     setMensagem('');
 
     if (!/^\d+$/.test(matricula)) {
@@ -32,6 +34,7 @@ export default function Register() {
     }
 
     try {
+      setEnviando(true);
       const response = await fetch(`${API_BASE}/users/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,6 +60,8 @@ export default function Register() {
       navigate('/login');
     } catch (error) {
       setMensagem('Erro ao conectar com o servidor');
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -126,7 +131,9 @@ export default function Register() {
           {mensagem && <p className="auth-message">{mensagem}</p>}
 
           <div className="auth-actions">
-            <button type="submit" className="btn-primary btn-pill">Cadastrar!</button>
+            <button type="submit" className="btn-primary btn-pill" disabled={enviando}>
+              {enviando ? 'Validando email...' : 'Cadastrar!'}
+            </button>
             <Link to="/login" className="btn-primary outline btn-pill">Faça login!</Link>
           </div>
         </form>

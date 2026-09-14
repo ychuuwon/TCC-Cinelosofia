@@ -8,4 +8,5 @@ module.exports = {
   PORT: process.env.PORT || 7777,
   EMAIL_USER: process.env.EMAIL_USER?.trim(),
   BREVO_API_KEY: process.env.BREVO_API_KEY?.trim(),
+  EMAILVERIFY_API_KEY: process.env.EMAILVERIFY_API_KEY?.trim(),
 };

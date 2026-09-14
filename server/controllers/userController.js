@@ -7,6 +7,7 @@ const {
   JWT_SECRET,
   EMAIL_USER,
   BREVO_API_KEY,
+  EMAILVERIFY_API_KEY,
 } = require('../config');
 
 const sendEmail = async (mailOptions) => {
@@ -97,8 +98,37 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ erro: 'A matrícula deve conter exatamente 10 algarismos.' });
     }
 
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
+    const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+    if (!/^\S+@\S+\.\S+$/.test(emailNormalizado)) {
       return res.status(400).json({ erro: 'Digite um email válido.' });
+    }
+
+    if (!EMAILVERIFY_API_KEY) {
+      console.error('Validação de email indisponível: EMAILVERIFY_API_KEY não configurada.');
+      return res.status(503).json({ erro: 'A validação de email está temporariamente indisponível. Tente novamente mais tarde.' });
+    }
+
+    let validacaoEmail;
+    try {
+      const emailVerifyUrl = new URL('https://app.emailverify.io/api/v1/validate');
+      emailVerifyUrl.searchParams.set('key', EMAILVERIFY_API_KEY);
+      emailVerifyUrl.searchParams.set('email', emailNormalizado);
+
+      const emailVerifyResponse = await fetch(emailVerifyUrl);
+      validacaoEmail = await emailVerifyResponse.json();
+
+      if (!emailVerifyResponse.ok) {
+        console.error('EmailVerify.io retornou erro:', emailVerifyResponse.status, validacaoEmail);
+        return res.status(400).json({ erro: 'Não foi possível validar este email. Informe um email real e tente novamente.' });
+      }
+    } catch (error) {
+      console.error('Erro ao consultar EmailVerify.io:', error);
+      return res.status(503).json({ erro: 'Não foi possível consultar o serviço de validação de email. Tente novamente mais tarde.' });
+    }
+
+    if (validacaoEmail?.status !== 'valid') {
+      return res.status(400).json({ erro: 'O email informado não foi validado. Use um email real e ativo.' });
     }
 
     const usuarioExisteMatricula = await User.findOne({ matricula });
@@ -111,7 +141,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ erro: 'Este nome de usuário já está em uso.' });
     }
 
-    const usuarioExisteEmail = await User.findOne({ email });
+    const usuarioExisteEmail = await User.findOne({ email: emailNormalizado });
     if (usuarioExisteEmail) {
       return res.status(400).json({ erro: 'Este email já está em uso.' });
     }
@@ -123,7 +153,7 @@ const registerUser = async (req, res) => {
       id: Date.now(),
       matricula,
       nome_usuario,
-      email,
+      email: emailNormalizado,
       senha: senhaHash,
       adm: false,
     });
