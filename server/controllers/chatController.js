@@ -60,7 +60,7 @@ const registrarDenunciaModeracao = async (chatId, comentarioId, texto, motivoSin
 
 const buscarTodos = async (req, res) => {
   try {
-    const chats = await Chat.find().populate('comentarios.usuario', 'nome_usuario');
+    const chats = await Chat.find().populate('comentarios.usuario', 'nome_usuario fotoPerfil');
     return res.status(200).json(chats);
   } catch (error) {
     console.error(error);
@@ -70,7 +70,7 @@ const buscarTodos = async (req, res) => {
 
 const buscarPorId = async (req, res) => {
   try {
-    const chat = await Chat.findById(req.params.id).populate('comentarios.usuario', 'nome_usuario');
+    const chat = await Chat.findById(req.params.id).populate('comentarios.usuario', 'nome_usuario fotoPerfil');
 
     if (!chat) {
       return res.status(404).json({ erro: 'Chat não encontrado.' });
@@ -177,7 +177,7 @@ const adicionarComentario = async (req, res) => {
       );
     }
 
-    const chatAtualizado = await Chat.findById(req.params.id).populate('comentarios.usuario', 'nome_usuario');
+    const chatAtualizado = await Chat.findById(req.params.id).populate('comentarios.usuario', 'nome_usuario fotoPerfil');
 
     // Se foi sinalizado, avisar o cliente
     if (resultadoModeracao.flagged) {

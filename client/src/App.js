@@ -28,8 +28,13 @@ export default function App() {
 
   useEffect(() => {
     const syncToken = () => setToken(localStorage.getItem('token'));
+    const syncProfile = (event) => setUser(event.detail);
     window.addEventListener('storage', syncToken);
-    return () => window.removeEventListener('storage', syncToken);
+    window.addEventListener('profile-updated', syncProfile);
+    return () => {
+      window.removeEventListener('storage', syncToken);
+      window.removeEventListener('profile-updated', syncProfile);
+    };
   }, []);
 
   const handleLogin = (nextToken, nextUser) => {

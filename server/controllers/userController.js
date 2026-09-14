@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 const {
   JWT_SECRET,
   EMAIL_USER,
@@ -69,6 +70,7 @@ const loginUser = async (req, res) => {
         matricula: usuario.matricula,
         nome_usuario: usuario.nome_usuario,
         email: usuario.email,
+        fotoPerfil: usuario.fotoPerfil,
         adm: usuario.adm,
       },
       token,
@@ -299,10 +301,73 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const atualizarPerfil = async (req, res) => {
+  try {
+    const { nome_usuario: nomeUsuario, email, senha } = req.body;
+    const usuario = await User.findById(req.userId);
+
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    if (nomeUsuario !== undefined) {
+      const nomeNormalizado = nomeUsuario.trim();
+      if (!nomeNormalizado) {
+        return res.status(400).json({ erro: 'O nome de usuário não pode ficar vazio.' });
+      }
+      const nomeEmUso = await User.findOne({ nome_usuario: nomeNormalizado, _id: { $ne: usuario._id } });
+      if (nomeEmUso) {
+        return res.status(400).json({ erro: 'Este nome de usuário já está em uso.' });
+      }
+      usuario.nome_usuario = nomeNormalizado;
+    }
+
+    if (email !== undefined) {
+      const emailNormalizado = email.trim().toLowerCase();
+      if (!/^\S+@\S+\.\S+$/.test(emailNormalizado)) {
+        return res.status(400).json({ erro: 'Digite um email válido.' });
+      }
+      const emailEmUso = await User.findOne({ email: emailNormalizado, _id: { $ne: usuario._id } });
+      if (emailEmUso) {
+        return res.status(400).json({ erro: 'Este email já está em uso.' });
+      }
+      usuario.email = emailNormalizado;
+    }
+
+    if (senha) {
+      if (senha.length < 6) {
+        return res.status(400).json({ erro: 'A senha deve ter no mínimo 6 caracteres.' });
+      }
+      usuario.senha = await bcrypt.hash(senha, await bcrypt.genSalt(10));
+    }
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, `perfil-${usuario._id}`);
+      usuario.fotoPerfil = result.secure_url;
+    }
+
+    await usuario.save();
+    return res.status(200).json({
+      mensagem: 'Perfil atualizado com sucesso.',
+      usuario: {
+        id: usuario._id,
+        matricula: usuario.matricula,
+        nome_usuario: usuario.nome_usuario,
+        email: usuario.email,
+        fotoPerfil: usuario.fotoPerfil,
+        adm: usuario.adm,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: error.message || 'Erro ao atualizar perfil.' });
+  }
+};
+
 const listarUsuariosAdmin = async (req, res) => {
   try {
     const usuarios = await User.find({ adm: { $ne: true } })
-      .select('_id nome_usuario email matricula adm chatBanido')
+      .select('_id nome_usuario email matricula adm chatBanido fotoPerfil')
       .sort({ nome_usuario: 1 })
       .lean();
 
@@ -353,6 +418,7 @@ module.exports = {
   registerUser,
   requestPasswordReset,
   resetPassword,
+  atualizarPerfil,
   listarUsuariosAdmin,
   alternarBanimentoChat,
 };

@@ -1,11 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import { isAdmin } from '../auth';
+import API_BASE from '../config';
 
-export default function Navbar({ token, onLogout }) {
+export default function Navbar({ token, user, onLogout }) {
   const navigate = useNavigate();
   const [navbarHidden, setNavbarHidden] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({ nome_usuario: '', email: '', senha: '' });
+  const [profileFile, setProfileFile] = useState(null);
+  const [profilePreview, setProfilePreview] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const profileAreaRef = useRef(null);
+
+  useEffect(() => {
+    setProfileDraft({ nome_usuario: user?.nome_usuario || '', email: user?.email || '', senha: '' });
+    setProfilePreview(user?.fotoPerfil || '');
+  }, [user]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (profileAreaRef.current && !profileAreaRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -77,6 +102,47 @@ export default function Navbar({ token, onLogout }) {
     }
   };
 
+  const handleProfileFile = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setProfileFile(file);
+      setProfilePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    setSavingProfile(true);
+    setProfileMessage('');
+    setProfileError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('nome_usuario', profileDraft.nome_usuario);
+      formData.append('email', profileDraft.email);
+      if (profileDraft.senha) formData.append('senha', profileDraft.senha);
+      if (profileFile) formData.append('fotoPerfil', profileFile);
+
+      const response = await fetch(`${API_BASE}/users/profile`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.erro || 'Não foi possível salvar o perfil.');
+
+      localStorage.setItem('usuario', JSON.stringify(data.usuario));
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: data.usuario }));
+      setProfileFile(null);
+      setProfileDraft((current) => ({ ...current, senha: '' }));
+      setProfileMessage(data.mensagem || 'Perfil atualizado.');
+    } catch (error) {
+      setProfileError(error.message || 'Erro ao salvar o perfil.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   return (
     <nav className={`navbar navbar-cinelosofia${navbarHidden ? ' navbar-hidden' : ''}`}>
       <div className="navbar-container nav-links">
@@ -97,9 +163,32 @@ export default function Navbar({ token, onLogout }) {
 
         <div className="navbar-auth">
           {token ? (
-            <button onClick={handleLogout} className="btn-logout btn-primary">
-              SAIR
-            </button>
+            <div className="navbar-profile-area" ref={profileAreaRef}>
+              <button
+                type="button"
+                className="navbar-profile-button"
+                onClick={() => setProfileOpen((current) => !current)}
+                aria-label="Abrir perfil"
+                aria-expanded={profileOpen}
+              >
+                {user?.fotoPerfil ? <img src={user.fotoPerfil} alt="" /> : <span aria-hidden="true">👤</span>}
+              </button>
+              {profileOpen && (
+                <form className="navbar-profile-popup" onSubmit={handleProfileSave}>
+                  <label className="profile-avatar-upload">
+                    {profilePreview ? <img src={profilePreview} alt="Pré-visualização do perfil" /> : <span>Inserir imagem</span>}
+                    <input type="file" accept="image/*" onChange={handleProfileFile} />
+                  </label>
+                  <label>Nome de usuário<input value={profileDraft.nome_usuario} onChange={(event) => setProfileDraft({ ...profileDraft, nome_usuario: event.target.value })} /></label>
+                  <label>Email<input type="email" value={profileDraft.email} onChange={(event) => setProfileDraft({ ...profileDraft, email: event.target.value })} /></label>
+                  <label>Nova senha<input type="password" value={profileDraft.senha} onChange={(event) => setProfileDraft({ ...profileDraft, senha: event.target.value })} placeholder="Deixe vazio para manter" /></label>
+                  {profileError && <small className="profile-message profile-message-error">{profileError}</small>}
+                  {profileMessage && <small className="profile-message">{profileMessage}</small>}
+                  <button type="submit" className="profile-save-button" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar'}</button>
+                </form>
+              )}
+              <button onClick={handleLogout} className="btn-logout btn-primary">SAIR</button>
+            </div>
           ) : (
             <Link to="/login" className="btn-login btn-primary">
               LOGIN

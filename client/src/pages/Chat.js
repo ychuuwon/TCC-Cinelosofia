@@ -381,6 +381,7 @@ export default function Chat({ compact = false, onClose }) {
               {chat?.comentarios?.length ? (
                 chat.comentarios.map((comentario) => {
                   const nomeUsuario = comentario.usuario?.nome_usuario || 'Usuário';
+                  const fotoPerfil = comentario.usuario?.fotoPerfil;
                   const comentarioUsuarioId = comentario.usuario?._id || comentario.usuario?.id || null;
                   const isCurrentUser = Boolean(
                     usuarioAtualId && comentarioUsuarioId && String(comentarioUsuarioId) === String(usuarioAtualId)
@@ -393,6 +394,7 @@ export default function Chat({ compact = false, onClose }) {
                     >
                       <div className="chat-message-meta">
                         <div className="chat-message-author">
+                          {fotoPerfil ? <img className="chat-avatar" src={fotoPerfil} alt="" /> : <span className="chat-avatar chat-avatar-fallback" aria-hidden="true">👤</span>}
                           <strong>{isCurrentUser ? 'Você' : nomeUsuario}</strong>
                           <span>
                             {new Date(comentario.enviadoEm).toLocaleString('pt-BR', {

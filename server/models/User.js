@@ -30,6 +30,10 @@ const usuarioSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\S+@\S+\.\S+$/, 'Digite um email válido.'],
   },
+  fotoPerfil: {
+    type: String,
+    default: '',
+  },
   senha: {
     type: String,
     required: true,

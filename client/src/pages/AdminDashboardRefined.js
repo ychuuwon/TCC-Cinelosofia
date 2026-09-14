@@ -1680,7 +1680,10 @@ export default function AdminDashboard() {
                         tabIndex="0"
                         aria-label={`Detalhes do usuário ${usuario.nome_usuario}`}
                       >
-                        <strong>{usuario.nome_usuario}</strong>
+                        <div className="admin-user-heading">
+                          {usuario.fotoPerfil ? <img className="admin-user-avatar" src={usuario.fotoPerfil} alt="" /> : <span className="admin-user-avatar admin-user-avatar-fallback" aria-hidden="true">👤</span>}
+                          <strong>{usuario.nome_usuario}</strong>
+                        </div>
                         <div className="admin-user-details">
                           <span><b>Nome de usuário:</b> {usuario.nome_usuario}</span>
                           <span><b>Email:</b> {usuario.email}</span>
