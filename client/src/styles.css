@@ -1068,10 +1068,9 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
    match the 'participe' page: larger, same-height cards and full-height covers */
 .next-meet-card > .poll-panel.compact .poll-option-img {
   height: 100%;
-}
-
-.next-meet-card > .poll-panel .poll-option {
-  min-height: 240px;
+  padding: 0;
+  border-radius: 0;
+  object-fit: contain;
 }
 
 /* quando o Poll é renderizado como filho direto do cartão 'next-meet-card',
@@ -2171,6 +2170,14 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   }
 
   .participate-page .poll-option-image {
+    flex-basis: 120px;
+  }
+
+  .page-home #proximo-encontro .next-meet-card > .poll-panel .poll-option {
+    flex-direction: column;
+  }
+
+  .page-home #proximo-encontro .next-meet-card > .poll-panel .poll-option-image {
     flex-basis: 120px;
   }
 }
