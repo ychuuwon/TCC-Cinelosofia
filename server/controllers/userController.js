@@ -372,11 +372,22 @@ const atualizarPerfil = async (req, res) => {
     }
 
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, `perfil-${usuario._id}`);
+      console.info('[profile-upload] sending image to Cloudinary', {
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+      });
+      const result = await uploadToCloudinary(req.file.buffer, `perfil-${usuario._id}-${crypto.randomUUID()}`);
+      console.info('[profile-upload] Cloudinary upload completed', {
+        hasSecureUrl: Boolean(result?.secure_url),
+        version: result?.version || null,
+      });
       usuario.fotoPerfil = result.secure_url;
     }
 
     await usuario.save();
+    console.info('[profile-upload] profile saved', {
+      hasPhoto: Boolean(usuario.fotoPerfil),
+    });
     return res.status(200).json({
       mensagem: 'Perfil atualizado com sucesso.',
       usuario: {

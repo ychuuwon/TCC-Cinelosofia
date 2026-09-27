@@ -130,10 +130,14 @@ export default function Navbar({ token, user, onLogout }) {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.erro || 'Não foi possível salvar o perfil.');
+      if (profileFile && (!data.usuario?.fotoPerfil || data.usuario.fotoPerfil === user?.fotoPerfil)) {
+        throw new Error('O servidor não confirmou a alteração da foto. Tente novamente.');
+      }
 
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
       window.dispatchEvent(new CustomEvent('profile-updated', { detail: data.usuario }));
       setProfileFile(null);
+      setProfilePreview(data.usuario?.fotoPerfil || '');
       setProfileDraft((current) => ({ ...current, senha: '' }));
       setProfileMessage(data.mensagem || 'Perfil atualizado.');
     } catch (error) {
@@ -184,10 +188,12 @@ export default function Navbar({ token, user, onLogout }) {
                   <label>Nova senha<input type="password" value={profileDraft.senha} onChange={(event) => setProfileDraft({ ...profileDraft, senha: event.target.value })} placeholder="Deixe vazio para manter" /></label>
                   {profileError && <small className="profile-message profile-message-error">{profileError}</small>}
                   {profileMessage && <small className="profile-message">{profileMessage}</small>}
-                  <button type="submit" className="profile-save-button" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar'}</button>
+                  <div className="profile-popup-actions">
+                    <button type="submit" className="profile-save-button" disabled={savingProfile}>{savingProfile ? 'Salvando...' : 'Salvar'}</button>
+                    <button type="button" onClick={handleLogout} className="profile-save-button">SAIR</button>
+                  </div>
                 </form>
               )}
-              <button onClick={handleLogout} className="btn-logout btn-primary">SAIR</button>
             </div>
           ) : (
             <Link to="/login" className="btn-login btn-primary">
