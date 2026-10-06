@@ -296,6 +296,27 @@ const listarPresencas = async (req, res) => {
   }
 };
 
+const deletarPresenca = async (req, res) => {
+  try {
+    const encontro = await Encontro.findById(req.params.id);
+
+    if (!encontro) {
+      return res.status(404).json({ erro: 'Encontro não encontrado.' });
+    }
+
+    if (!encontro.presencas.id(req.params.presencaId)) {
+      return res.status(404).json({ erro: 'Presença não encontrada.' });
+    }
+
+    encontro.presencas.pull(req.params.presencaId);
+    await encontro.save();
+    return res.status(200).json({ mensagem: 'Presença excluída com sucesso.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao excluir presença.' });
+  }
+};
+
 module.exports = {
   buscarTodos,
   buscarProximo,
@@ -307,4 +328,5 @@ module.exports = {
   deletarEncontro,
   registrarPresenca,
   listarPresencas,
+  deletarPresenca,
 };

@@ -1284,6 +1284,10 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   box-shadow: var(--panel-shadow);
 }
 
+.collection-list .presence-list-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .collection-list {
   display: grid;
   gap: 18px;
@@ -2913,6 +2917,11 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   .admin-list-item {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-list-item.admin-presence-item {
+    flex-direction: row;
+    align-items: center;
   }
 
   .admin-report-actions {

@@ -12,6 +12,7 @@ export default function AdminPresencas() {
   const [encontroSelecionado, setEncontroSelecionado] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mensagem, setMensagem] = useState('');
+  const [removendoPresencaId, setRemovendoPresencaId] = useState(null);
 
   useEffect(() => {
     const carregarEncontros = async () => {
@@ -90,6 +91,39 @@ export default function AdminPresencas() {
       navigate('/admin/encontros/proximo/presencas');
     } else {
       navigate(`/admin/encontros/${encontroId}/presencas`);
+    }
+  };
+
+  const handleExcluirPresenca = async (presencaId) => {
+    if (!window.confirm('Excluir a presença deste aluno?')) {
+      return;
+    }
+
+    const encontroId = encontroSelecionado?._id || id;
+    const token = localStorage.getItem('token');
+
+    setRemovendoPresencaId(presencaId);
+    setMensagem('');
+
+    try {
+      const response = await fetch(`${API_BASE}/encontros/${encontroId}/presencas/${presencaId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.erro || 'Não foi possível excluir a presença.');
+      }
+
+      setPresencas((atual) => atual.filter((presenca) => presenca._id !== presencaId));
+      setMensagem('Presença excluída com sucesso.');
+    } catch (error) {
+      setMensagem(error.message || 'Erro ao excluir presença.');
+    } finally {
+      setRemovendoPresencaId(null);
     }
   };
 
@@ -186,12 +220,20 @@ export default function AdminPresencas() {
             ) : (
               presencas.map((presenca, index) => {
                 return (
-                  <article className="collection-item" key={`${presenca._id || index}`}>
+                  <article className="collection-item presence-list-item" key={`${presenca._id || index}`}>
                     <div>
                       <p><strong>Nome completo:</strong> {presenca.nome}</p>
                       <p><strong>Turma:</strong> {presenca.turma}</p>
                       <p><strong>Data do registro:</strong> {presenca.data_registro ? new Date(presenca.data_registro).toLocaleString('pt-BR') : '-'}</p>
                     </div>
+                    <button
+                      type="button"
+                      className="btn-pill outline"
+                      onClick={() => handleExcluirPresenca(presenca._id)}
+                      disabled={removendoPresencaId === presenca._id}
+                    >
+                      {removendoPresencaId === presenca._id ? 'Excluindo...' : 'Excluir'}
+                    </button>
                   </article>
                 );
               })

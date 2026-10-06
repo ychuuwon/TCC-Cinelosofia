@@ -14,6 +14,7 @@ const {
   deletarEncontro,
   registrarPresenca,
   listarPresencas,
+  deletarPresenca,
 } = require('../controllers/encontroController');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -31,5 +32,6 @@ router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), atua
 router.delete('/:id', authMiddleware, adminMiddleware, deletarEncontro);
 router.post('/:id/presenca', authMiddleware, registrarPresenca);
 router.get('/:id/presencas', authMiddleware, adminMiddleware, listarPresencas);
+router.delete('/:id/presencas/:presencaId', authMiddleware, adminMiddleware, deletarPresenca);
 
 module.exports = router;

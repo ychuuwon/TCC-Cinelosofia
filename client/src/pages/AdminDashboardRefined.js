@@ -162,6 +162,8 @@ export default function AdminDashboard() {
   const [presencasLista, setPresencasLista] = useState([]);
   const [loadingPresencas, setLoadingPresencas] = useState(false);
   const [mensagemPresencas, setMensagemPresencas] = useState('');
+  const [mensagemExclusaoPresenca, setMensagemExclusaoPresenca] = useState('');
+  const [removendoPresencaId, setRemovendoPresencaId] = useState(null);
   const [registrosEncontros, setRegistrosEncontros] = useState([]);
   const [enquetes, setEnquetes] = useState([]);
   const [loadingEnquetes, setLoadingEnquetes] = useState(false);
@@ -290,7 +292,38 @@ export default function AdminDashboard() {
     return () => window.removeEventListener('storage', onStorage);
   }, [activeSection, currentEncontroId]);
 
-  
+    const handleExcluirPresenca = async (presenca) => {
+      if (!window.confirm(`Excluir a presença de ${presenca.nome || 'este aluno'}?`)) {
+        return;
+      }
+
+      if (!currentEncontroId) {
+        setMensagemExclusaoPresenca('Não foi possível identificar o encontro selecionado.');
+        return;
+      }
+
+      setRemovendoPresencaId(presenca._id);
+      setMensagemExclusaoPresenca('');
+
+      try {
+        const response = await fetch(`${API_BASE}/encontros/${currentEncontroId}/presencas/${presenca._id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.erro || 'Não foi possível excluir a presença.');
+        }
+
+        setPresencasLista((atual) => atual.filter((item) => item._id !== presenca._id));
+        setMensagemExclusaoPresenca('Presença excluída com sucesso.');
+      } catch (error) {
+        setMensagemExclusaoPresenca(error.message || 'Erro ao excluir presença.');
+      } finally {
+        setRemovendoPresencaId(null);
+      }
+    };
 
   const idsEncontrosPublicados = new Set(
     (Array.isArray(registrosEncontros) ? registrosEncontros : [])
@@ -1274,6 +1307,7 @@ export default function AdminDashboard() {
                   <h2>Presenças dos alunos</h2>
                 </div>
               </div>
+              {mensagemExclusaoPresenca && <p className="chat-status success">{mensagemExclusaoPresenca}</p>}
 
               <div className="admin-list">
                 {loadingPresencas ? (
@@ -1284,12 +1318,20 @@ export default function AdminDashboard() {
                   <p className="chat-status">Nenhuma presença cadastrada ainda.</p>
                 ) : (
                   presencasLista.map((presenca, index) => (
-                    <article key={presenca._id || index} className="admin-list-item">
+                    <article key={presenca._id || index} className="admin-list-item admin-presence-item">
                       <div>
                         <strong>{presenca.nome || 'Aluno'}</strong>
                         <p>{presenca.turma || '-'}{presenca.encontro ? ` • ${presenca.encontro}` : ''}</p>
                         <span>{presenca.data_registro ? new Date(presenca.data_registro).toLocaleString('pt-BR') : 'Sem data de registro'}</span>
                       </div>
+                      <button
+                        type="button"
+                        className="btn-pill outline"
+                        onClick={() => handleExcluirPresenca(presenca)}
+                        disabled={removendoPresencaId === presenca._id}
+                      >
+                        {removendoPresencaId === presenca._id ? 'Excluindo...' : 'Excluir'}
+                      </button>
                     </article>
                   ))
                 )}
