@@ -7,6 +7,7 @@ const {
   buscarTodos,
   buscarProximo,
   buscarAtivo,
+  buscarParticipacao,
   buscarPorId,
   criarEncontro,
   atualizarEncontro,
@@ -23,6 +24,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get('/', buscarTodos);
 router.get('/proximo', buscarProximo);
 router.get('/ativo', buscarAtivo);
+router.get('/participacao', buscarParticipacao);
 router.get('/:id', buscarPorId);
 
 // Rotas autenticadas

@@ -12,9 +12,9 @@ function decodeTokenUserId(token) {
   }
 }
 
-export default function Poll({ compact = false }) {
-  const [enquete, setEnquete] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function Poll({ compact = false, initialEnquete }) {
+  const [enquete, setEnquete] = useState(() => initialEnquete || null);
+  const [loading, setLoading] = useState(() => initialEnquete === undefined);
   const [voting, setVoting] = useState(false);
   const [voted, setVoted] = useState(false);
   const [votedIndex, setVotedIndex] = useState(null);
@@ -24,35 +24,40 @@ export default function Poll({ compact = false }) {
   const userId = token ? decodeTokenUserId(token) : null;
 
   useEffect(() => {
+    const aplicarEnquete = (data) => {
+      const enqueteAtual = data && data._id ? data : null;
+      setEnquete(enqueteAtual);
+      const found = userId && Array.isArray(enqueteAtual?.votes)
+        ? enqueteAtual.votes.find((vote) => String(vote.usuario) === String(userId))
+        : null;
+      setVoted(Boolean(found));
+      setVotedIndex(found ? Number(found.optionIndex) : null);
+    };
+
     const carregar = async () => {
       setLoading(true);
       try {
         const resp = await fetch(`${API_BASE}/enquetes/ativo`);
         const data = await resp.json();
-        if (data && data._id) {
-          setEnquete(data);
-          // check if user already voted
-          if (userId && Array.isArray(data.votes)) {
-            const found = data.votes.find((v) => String(v.usuario) === String(userId));
-            setVoted(Boolean(found));
-            setVotedIndex(found ? Number(found.optionIndex) : null);
-          }
-        } else {
-          setEnquete(null);
-        }
+        aplicarEnquete(data);
       } catch (err) {
-        setEnquete(null);
+        aplicarEnquete(null);
       } finally {
         setLoading(false);
       }
     };
 
-    carregar();
+    if (initialEnquete === undefined) {
+      carregar();
+    } else {
+      aplicarEnquete(initialEnquete);
+      setLoading(false);
+    }
 
     const onUpdate = () => carregar();
     window.addEventListener('enquete-atualizada', onUpdate);
     return () => window.removeEventListener('enquete-atualizada', onUpdate);
-  }, [userId]);
+  }, [userId, initialEnquete]);
 
   if (loading) return null;
   if (!enquete) return null;
@@ -137,8 +142,10 @@ export default function Poll({ compact = false }) {
 
   return (
     <div className={`poll-panel ${compact ? 'compact' : ''}`}>
-      <h3>{enquete.titulo}</h3>
-      {!enquete.isOpen && <p className="poll-closed-message">Enquete fechada.</p>}
+      <header className="poll-header">
+        <h3>{enquete.titulo}</h3>
+        {!enquete.isOpen && <p className="poll-closed-message">Enquete fechada.</p>}
+      </header>
       <div className="poll-options">
         {enquete.options.map((opt, idx) => (
           <div key={idx} className="poll-option">

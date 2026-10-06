@@ -938,14 +938,41 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   gap: 12px;
 }
 
+.poll-header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border-bottom: 2px solid rgba(169, 31, 26, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 6px 12px rgba(112, 19, 16, 0.12);
+}
+
 .poll-panel h3 {
   font-size: 1.6rem;
-  margin: 0 0 12px 0;
-  position: sticky;
-  top: 0;
-  background: inherit;
-  padding: 8px 0;
-  z-index: 3;
+  margin: 0;
+  position: static;
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
+}
+
+.participate-page .poll-panel:not(.compact) {
+  display: flex;
+  flex-direction: column;
+  height: min(76vh, 720px);
+  max-height: calc(100vh - 200px);
+  min-height: 320px;
+  overflow: hidden;
+}
+
+.participate-page .poll-panel:not(.compact) .poll-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+  grid-auto-rows: auto;
 }
 
 .poll-closed-message {

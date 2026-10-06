@@ -10,6 +10,7 @@ export default function EncontroDetalhes() {
   const [mensagem, setMensagem] = useState('');
   const [encontro, setEncontro] = useState(null);
   const [activeEnquete, setActiveEnquete] = useState(null);
+  const [carregandoConteudo, setCarregandoConteudo] = useState(true);
   const { id } = useParams();
   const turmasDisponiveis = ['1A', '1B', '1H', '2A', '2B', '2H', '3A', '3B', '3H', '3C'];
 
@@ -17,41 +18,76 @@ export default function EncontroDetalhes() {
   const encontroId = encontro?._id || (id !== 'proximo' ? id : null);
 
   useEffect(() => {
-    const carregarEncontro = async () => {
+    let mounted = true;
+
+    const carregarConteudo = async (mostrarCarregamento = false) => {
+      if (mostrarCarregamento) setCarregandoConteudo(true);
+
       try {
-        const endpoint = id === 'proximo' ? `${API_BASE}/encontros/proximo` : `${API_BASE}/encontros/${id}`;
-        const response = await fetch(endpoint);
-        const data = await response.json();
-        setEncontro(data);
+        if (id === 'proximo') {
+          const response = await fetch(`${API_BASE}/encontros/participacao`);
+          let data = null;
+
+          if (response.ok) {
+            const resposta = await response.json().catch(() => null);
+            if (resposta && Object.prototype.hasOwnProperty.call(resposta, 'tipo')) {
+              data = resposta;
+            }
+          }
+
+          if (!data) {
+            const [encontroResponse, enqueteResponse] = await Promise.all([
+              fetch(`${API_BASE}/encontros/proximo`),
+              fetch(`${API_BASE}/enquetes/ativo`),
+            ]);
+            const [encontroData, enqueteData] = await Promise.all([
+              encontroResponse.ok ? encontroResponse.json() : null,
+              enqueteResponse.ok ? enqueteResponse.json() : null,
+            ]);
+            data = encontroData?._id
+              ? { tipo: 'encontro', conteudo: encontroData }
+              : enqueteData?._id
+                ? { tipo: 'enquete', conteudo: enqueteData }
+                : { tipo: null, conteudo: null };
+          }
+
+          if (!mounted) return;
+          setEncontro(data.tipo === 'encontro' ? data.conteudo : null);
+          setActiveEnquete(data.tipo === 'enquete' ? data.conteudo : null);
+        } else {
+          const [encontroResponse, enqueteResponse] = await Promise.all([
+            fetch(`${API_BASE}/encontros/${id}`),
+            fetch(`${API_BASE}/enquetes/ativo`),
+          ]);
+          if (!encontroResponse.ok) throw new Error('Não foi possível carregar o encontro.');
+          const [encontroData, enqueteData] = await Promise.all([
+            encontroResponse.json(),
+            enqueteResponse.json(),
+          ]);
+          if (!mounted) return;
+          setEncontro(encontroData);
+          setActiveEnquete(enqueteData?._id ? enqueteData : null);
+        }
       } catch (error) {
-        setEncontro(null);
+        if (mounted) {
+          setEncontro(null);
+          setActiveEnquete(null);
+        }
+      } finally {
+        if (mounted && mostrarCarregamento) setCarregandoConteudo(false);
       }
     };
 
-    carregarEncontro();
-
-    // carregar enquete ativa para decidir renderização full-width
-    const carregarEnqueteAtiva = async () => {
-      try {
-        const resp = await fetch(`${API_BASE}/enquetes/ativo`);
-        const data = await resp.json();
-        if (data && data._id) setActiveEnquete(data);
-        else setActiveEnquete(null);
-      } catch (e) {
-        setActiveEnquete(null);
-      }
-    };
-
-    carregarEnqueteAtiva();
+    carregarConteudo(true);
 
     const atualizarQuandoSalvar = () => {
-      carregarEncontro();
-      carregarEnqueteAtiva();
+      carregarConteudo();
     };
     window.addEventListener('encontro-atualizado', atualizarQuandoSalvar);
     window.addEventListener('enquete-atualizada', atualizarQuandoSalvar);
 
     return () => {
+      mounted = false;
       window.removeEventListener('encontro-atualizado', atualizarQuandoSalvar);
       window.removeEventListener('enquete-atualizada', atualizarQuandoSalvar);
     };
@@ -128,9 +164,11 @@ export default function EncontroDetalhes() {
     <main className="detail-page participate-page">
       <h1>PARTICIPE</h1>
       <section className="detail-card">
-        {activeEnquete ? (
+        {carregandoConteudo ? (
+          <p className="chat-status">Carregando participação...</p>
+        ) : activeEnquete ? (
           <div className="enquete-full">
-            <Poll />
+            <Poll initialEnquete={activeEnquete} />
           </div>
         ) : (
           <>
@@ -185,7 +223,7 @@ export default function EncontroDetalhes() {
                 </div>
               ) : (
                 <div className="presence-disabled-message">
-                  <Poll />
+                  <Poll initialEnquete={activeEnquete} />
                 </div>
               )}
             </div>

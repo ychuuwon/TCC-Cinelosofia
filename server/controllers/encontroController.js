@@ -43,6 +43,37 @@ const buscarAtivo = async (req, res) => {
   }
 };
 
+const buscarParticipacao = async (req, res) => {
+  try {
+    const [enqueteAtiva, encontroAtivo] = await Promise.all([
+      Enquete.findOne({ destaque: true }).sort({ createdAt: -1 }),
+      Encontro.findOne({ destaque: true }).sort({ createdAt: -1 }),
+    ]);
+
+    if (enqueteAtiva) {
+      return res.status(200).json({ tipo: 'enquete', conteudo: enqueteAtiva });
+    }
+
+    if (encontroAtivo) {
+      return res.status(200).json({ tipo: 'encontro', conteudo: encontroAtivo });
+    }
+
+    const [enqueteAberta, ultimaEnquete] = await Promise.all([
+      Enquete.findOne({ isOpen: true }).sort({ createdAt: -1 }),
+      Enquete.findOne().sort({ createdAt: -1 }),
+    ]);
+    const enquete = enqueteAberta || ultimaEnquete;
+
+    return res.status(200).json({
+      tipo: enquete ? 'enquete' : null,
+      conteudo: enquete || null,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Erro ao carregar a página de participação.' });
+  }
+};
+
 const buscarPorId = async (req, res) => {
   try {
     const encontro = await Encontro.findById(req.params.id).populate('presencas.usuario', 'nome_usuario matricula');
@@ -321,6 +352,7 @@ module.exports = {
   buscarTodos,
   buscarProximo,
   buscarAtivo,
+  buscarParticipacao,
   buscarPorId,
   criarEncontro,
   atualizarEncontro,
