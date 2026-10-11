@@ -3,6 +3,16 @@ const Enquete = require('../models/enquete');
 const Usuario = require('../models/User');
 const { uploadToCloudinary } = require('../utils/cloudinary');
 
+const responderErroValidacao = (res, error) => {
+  if (error.name !== 'ValidationError') {
+    return false;
+  }
+
+  const detalhes = Object.values(error.errors).map((validationError) => validationError.message);
+  res.status(400).json({ erro: `Dados inválidos para o encontro: ${detalhes.join(' ')}` });
+  return true;
+};
+
 const buscarTodos = async (req, res) => {
   try {
     const encontros = await Encontro.find().sort({ data: 1 });
@@ -129,6 +139,7 @@ const criarEncontro = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    if (responderErroValidacao(res, error)) return;
     return res.status(500).json({ erro: 'Erro ao criar encontro.' });
   }
 };
@@ -172,7 +183,7 @@ const atualizarEncontro = async (req, res) => {
       updateFields.presencas = [];
     }
 
-    const encontro = await Encontro.findByIdAndUpdate(req.params.id, updateFields, { new: true });
+    const encontro = await Encontro.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true });
 
     if (!encontro) {
       return res.status(404).json({ erro: 'Encontro não encontrado.' });
@@ -184,6 +195,7 @@ const atualizarEncontro = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    if (responderErroValidacao(res, error)) return;
     return res.status(500).json({ erro: 'Erro ao atualizar encontro.' });
   }
 };
@@ -211,7 +223,7 @@ const salvarAtivo = async (req, res) => {
       const encontroAtualizado = await Encontro.findByIdAndUpdate(
         encontroAtual._id,
         { tema, sinopse, direcao, ano, genero, foto_capa: fotoCapaUrl, data, hora, local, duracao, obs, trailer, destaque: true, presencas: [] },
-        { new: true }
+        { new: true, runValidators: true }
       );
 
       return res.status(200).json({
@@ -243,6 +255,7 @@ const salvarAtivo = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    if (responderErroValidacao(res, error)) return;
     return res.status(500).json({ erro: 'Erro ao salvar encontro ativo.' });
   }
 };

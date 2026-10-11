@@ -32,6 +32,8 @@ const emptyEncontro = {
   trailer: '',
 };
 
+const SINOPSE_MAX_LENGTH = 500;
+
 const emptyCurta = {
   titulo: '',
   sinopse: '',
@@ -570,6 +572,10 @@ export default function AdminDashboard() {
 
     if (!novoEncontro.tema || !novoEncontro.data || !novoEncontro.hora || !novoEncontro.local) {
       setMensagemAdmin('Preencha tema, data, hora e local para salvar o encontro.');
+      return;
+    }
+
+    if (novoEncontro.sinopse.length > SINOPSE_MAX_LENGTH) {
       return;
     }
 
@@ -1173,6 +1179,7 @@ export default function AdminDashboard() {
                     id="encontro-tema"
                     type="text"
                     placeholder="Ex.: Estética e cinema no cotidiano"
+                    maxLength={100}
                     value={novoEncontro.tema}
                     onChange={(event) => setNovoEncontro((prev) => ({ ...prev, tema: event.target.value }))}
                     required
@@ -1187,6 +1194,15 @@ export default function AdminDashboard() {
                     value={novoEncontro.sinopse}
                     onChange={(event) => setNovoEncontro((prev) => ({ ...prev, sinopse: event.target.value }))}
                   />
+                  {novoEncontro.sinopse.length > SINOPSE_MAX_LENGTH ? (
+                    <p className="chat-status error" role="alert">
+                      Limite excedido: a sinopse permite até {SINOPSE_MAX_LENGTH} caracteres ({novoEncontro.sinopse.length} digitados).
+                    </p>
+                  ) : (
+                    <span className="admin-field-help">
+                      {novoEncontro.sinopse.length}/{SINOPSE_MAX_LENGTH} caracteres
+                    </span>
+                  )}
                 </div>
                 <div className="admin-field">
                   <label htmlFor="encontro-direcao">Direção</label>
@@ -1194,6 +1210,7 @@ export default function AdminDashboard() {
                     id="encontro-direcao"
                     type="text"
                     placeholder="Nome do diretor, mediador ou referência"
+                    maxLength={100}
                     value={novoEncontro.direcao}
                     onChange={(event) => setNovoEncontro((prev) => ({ ...prev, direcao: event.target.value }))}
                   />
@@ -1258,6 +1275,7 @@ export default function AdminDashboard() {
                     id="encontro-local"
                     type="text"
                     placeholder="Ex.: Auditório, sala 12 ou online"
+                    maxLength={100}
                     value={novoEncontro.local}
                     onChange={(event) => setNovoEncontro((prev) => ({ ...prev, local: event.target.value }))}
                     required
@@ -1279,6 +1297,7 @@ export default function AdminDashboard() {
                     id="encontro-obs"
                     rows="2"
                     placeholder="Informações extras para o público"
+                    maxLength={100}
                     value={novoEncontro.obs}
                     onChange={(event) => setNovoEncontro((prev) => ({ ...prev, obs: event.target.value }))}
                   />

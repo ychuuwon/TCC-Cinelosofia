@@ -34,7 +34,7 @@ const encontroSchema = new mongoose.Schema({
   },
   sinopse: {
     type: String,
-    maxlength: 300,
+    maxlength: [500, 'A sinopse pode ter no máximo 500 caracteres.'],
   },
   direcao: {
     type: String,
