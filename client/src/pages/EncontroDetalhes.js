@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Poll from '../components/Poll';
 import { useParams } from 'react-router-dom';
 import API_BASE from '../config';
+import { formatarDataEncontro } from '../utils/date';
 
 export default function EncontroDetalhes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -240,7 +241,7 @@ export default function EncontroDetalhes() {
               </div>
 
               <div className="detail-info detail-info-meta">
-                {encontro?.data && <p><strong>Data:</strong> {new Date(encontro.data).toLocaleDateString('pt-BR')}</p>}
+                {encontro?.data && <p><strong>Data:</strong> {formatarDataEncontro(encontro.data)}</p>}
                 {encontro?.hora && <p><strong>Hora:</strong> {encontro.hora}</p>}
                 {encontro?.local && <p><strong>Local:</strong> {encontro.local}</p>}
                 {encontro?.duracao && <p><strong>Duração:</strong> {encontro.duracao}</p>}

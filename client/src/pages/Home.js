@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ImageCarousel from '../components/ImageCarousel';
 import Poll from '../components/Poll';
 import API_BASE from '../config';
+import { formatarDataEncontro } from '../utils/date';
 
 const QUEM_SOMOS_IMAGES = [
   'https://res.cloudinary.com/cinelosofia/image/upload/v1787537762/cinelosofia/quemsomos1.jpeg.jpg',
@@ -101,7 +102,7 @@ export default function Home() {
                 {proximoEncontro?.genero && <p><strong>Gênero:</strong> {proximoEncontro.genero}</p>}
               </div>
               <div className="next-meet-meta">
-                {proximoEncontro?.data && <p><strong>Data:</strong> {new Date(proximoEncontro.data).toLocaleDateString('pt-BR')}</p>}
+                {proximoEncontro?.data && <p><strong>Data:</strong> {formatarDataEncontro(proximoEncontro.data)}</p>}
                 {proximoEncontro?.hora && <p><strong>Hora:</strong> {proximoEncontro.hora}</p>}
                 {proximoEncontro?.local && <p><strong>Local:</strong> {proximoEncontro.local}</p>}
                 {proximoEncontro?.duracao && <p><strong>Duração:</strong> {proximoEncontro.duracao}</p>}
