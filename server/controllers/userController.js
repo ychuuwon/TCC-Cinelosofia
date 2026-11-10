@@ -120,7 +120,7 @@ const registerUser = async (req, res) => {
 
       if (!emailVerifyResponse.ok) {
         console.error('EmailVerify.io retornou erro:', emailVerifyResponse.status, validacaoEmail);
-        return res.status(400).json({ erro: 'Não foi possível validar este email. Informe um email real e tente novamente.' });
+        return res.status(400).json({ erro: 'Não foi possível validar este email. Info0rme um email real e tente novamente.' });
       }
     } catch (error) {
       console.error('Erro ao consultar EmailVerify.io:', error);

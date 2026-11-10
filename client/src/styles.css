@@ -546,7 +546,8 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   border-right: none;
 }
 
-#quem-somos .text-panel {
+#quem-somos .text-panel,
+#nosso-objetivo .text-panel {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -555,7 +556,8 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   background: linear-gradient(180deg, rgba(251, 246, 232, 0.98), rgba(244, 239, 223, 0.96));
 }
 
-#quem-somos .text-panel h2 {
+#quem-somos .text-panel h2,
+#nosso-objetivo .text-panel h2 {
   font-size: clamp(2rem, 4vw, 4rem);
   border-radius: 0;
   margin-bottom: 0;
@@ -564,11 +566,26 @@ button:not(:disabled):not(.btn-denunciar):not(.btn-excluir-mensagem):not(.admin-
   color: var(--ink);
 }
 
-#quem-somos .text-panel p {
+#quem-somos .text-panel p,
+#nosso-objetivo .text-panel p {
   font-size: 1.08rem;
   line-height: 1.75;
   max-width: 34rem;
   color: var(--ink);
+}
+
+#nosso-objetivo .text-panel {
+  gap: 10px;
+  padding: 16px 32px;
+  border-radius: 14px;
+}
+
+#nosso-objetivo .text-panel h2 {
+  font-size: clamp(1.75rem, 3.5vw, 3.25rem);
+}
+
+#nosso-objetivo .text-panel p {
+  max-width: none;
 }
 
 .next-meet-card {

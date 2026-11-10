@@ -81,6 +81,15 @@ export default function Home() {
         </article>
       </section>
 
+      <section className="content-section" id="nosso-objetivo">
+        <article className="text-panel">
+          <h2>NOSSO OBJETIVO</h2>
+          <p>
+            Promover a exibição de filmes como ponto de partida da reflexão filosófica, estimulando o diálogo, a troca de ideias e a discussão de questões humanas, sociais e existenciais.
+          </p>
+        </article>
+      </section>
+
       <section className="content-section" id="proximo-encontro">
         <h2 className="section-title">PRÓXIMO ENCONTRO</h2>
         {proximoEncontro && proximoEncontro._id ? (
